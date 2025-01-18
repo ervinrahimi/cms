@@ -1,5 +1,6 @@
+import sdb from '@/db/surrealdb'
 import { NextResponse } from 'next/server'
-import sdb from '@/db/surealdb'
+
 
 /**
  * API Handler to define the example table in SurrealDB.
