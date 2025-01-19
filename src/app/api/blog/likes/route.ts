@@ -1,7 +1,7 @@
 // File: /app/api/blog/likes/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import sdb from '@/db/surrealdb'
-import { Like } from '@/models/types'
+import { Like } from '@/types/types'
 import { RecordId } from 'surrealdb'
 
 // GET /api/likes

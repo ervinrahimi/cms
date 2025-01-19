@@ -1,7 +1,7 @@
 // File: /app/api/blog/categories/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import sdb from '@/db/surrealdb'
-import { Category } from '@/models/types'
+import { Category } from '@/types/types'
 
 // GET /api/categories
 export async function GET() {

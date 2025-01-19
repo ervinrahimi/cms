@@ -1,7 +1,7 @@
 // File: /app/api/blog/tags/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import sdb from '@/db/surrealdb'
-import { Tag } from '@/models/types'
+import { Tag } from '@/types/types'
 import { RecordId } from 'surrealdb'
 
 // GET /api/tags/[id]
@@ -37,7 +37,10 @@ export async function PUT(req: NextRequest, context: { params: { id: string } })
       { op: 'replace', path: '/updatedAt', value: new Date().toISOString() },
     ])
     if (!updated) {
-      return NextResponse.json({ message: 'An issue occurred while updating the record' }, { status: 400 })
+      return NextResponse.json(
+        { message: 'An issue occurred while updating the record' },
+        { status: 400 }
+      )
     }
     return NextResponse.json(updated, { status: 200 })
   } catch (error: unknown) {
@@ -54,7 +57,10 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     const deleted = await db.delete(new RecordId('tags', id))
 
     if (!deleted) {
-      return NextResponse.json({ message: 'An issue occurred while deleting the record' }, { status: 400 })
+      return NextResponse.json(
+        { message: 'An issue occurred while deleting the record' },
+        { status: 400 }
+      )
     }
 
     return NextResponse.json({ message: 'Record successfully deleted' }, { status: 200 })

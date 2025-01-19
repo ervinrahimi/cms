@@ -1,7 +1,7 @@
 // File: /app/api/blog/likes/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import sdb from '@/db/surrealdb'
-import { Like } from '@/models/types'
+import { Like } from '@/types/types'
 import { RecordId } from 'surrealdb'
 
 // GET /api/likes/[id]
@@ -29,7 +29,10 @@ export async function PUT(req: NextRequest, context: { params: { id: string } })
 
     const [exists] = await db.query<Like[]>(`SELECT * FROM likes WHERE id = "likes:${id}"`)
     if (!exists) {
-      return NextResponse.json({ message: 'The requested tag was not found for update' }, { status: 404 })
+      return NextResponse.json(
+        { message: 'The requested tag was not found for update' },
+        { status: 404 }
+      )
     }
 
     const updated = await db.patch(new RecordId('likes', id), [
@@ -45,7 +48,10 @@ export async function PUT(req: NextRequest, context: { params: { id: string } })
       },
     ])
     if (!updated) {
-      return NextResponse.json({ message: 'An issue occurred while updating the record' }, { status: 400 })
+      return NextResponse.json(
+        { message: 'An issue occurred while updating the record' },
+        { status: 400 }
+      )
     }
 
     return NextResponse.json(updated, { status: 200 })
@@ -63,7 +69,10 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     const deleted = await db.delete(new RecordId('likes', id))
 
     if (!deleted) {
-      return NextResponse.json({ message: 'An issue occurred while deleting the record' }, { status: 400 })
+      return NextResponse.json(
+        { message: 'An issue occurred while deleting the record' },
+        { status: 400 }
+      )
     }
 
     return NextResponse.json({ message: 'Record successfully deleted' }, { status: 200 })

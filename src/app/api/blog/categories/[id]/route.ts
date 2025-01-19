@@ -1,7 +1,7 @@
 // File: /app/api/blog/categories/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import sdb from '@/db/surrealdb'
-import { Category } from '@/models/types'
+import { Category } from '@/types/types'
 import { RecordId } from 'surrealdb'
 
 // GET /api/categories/[id]

@@ -1,7 +1,7 @@
 // File: /app/api/blog/comments/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import sdb from '@/db/surrealdb'
-import { Comment } from '@/models/types'
+import { Comment } from '@/types/types'
 import { RecordId } from 'surrealdb'
 
 // GET /api/comments

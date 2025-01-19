@@ -1,7 +1,7 @@
 // File: /app/api/blog/tags/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import sdb from '@/db/surrealdb'
-import { Tag } from '@/models/types'
+import { Tag } from '@/types/types'
 
 // GET /api/tags
 export async function GET() {
