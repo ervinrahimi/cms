@@ -1,140 +1,131 @@
-import { NextRequest, NextResponse } from "next/server";
-import sdb from "@/db/surrealdb";
-import { Comment } from "@/types/types";
-import { RecordId } from "surrealdb";
-
+import { NextResponse } from 'next/server'
+import sdb from '@/db/surrealdb' // Import SurrealDB connection
+import { Patch, RecordId } from 'surrealdb'
+import { CommentSchemaUpdate } from '@/schemas/zod/blog'
 /*
-  Route: "api/comments/[id]" [ PUT - GET - DELETE ]
+  Route: "api/blog/[id]" [ PUT - GET - DELETE ]
  
  GET: API handler for fetching a specific comment from the "comments" table in SurrealDB.
  PUT: API handler for updating a specific comment in the "comments" table in SurrealDB.
  DELETE: API handler for deleting a specific comment from the "comments" table in SurrealDB.
  */
 
-// GET /api/comments/[id]
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+// GET /api/blog/comments/[id]
+export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
-    const db = await sdb();
-    const { id } = await params;
-    const result = await db.query<Comment[]>(
-      `SELECT * FROM comments WHERE id = comments:${id}`
-    );
-    if (!result || result.length == 0) {
-      return NextResponse.json(
-        { message: "Comment not found" },
-        { status: 404 }
-      );
-    }
-    return NextResponse.json(result[0], { status: 200 });
+    const db = await sdb()
+    const { id } = await params
+    CheckPostExists(id)
+
+    const comment = await db.select(new RecordId('comments', id))
+
+    return NextResponse.json(comment, { status: 200 })
   } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { message: "An error occurred", error: errorMessage },
-      { status: 500 }
-    );
+      { error: 'Failed to fetch comment', details: (error as Error).message },
+      {
+        status: 500,
+      }
+    )
   }
 }
 
-// PUT /api/comments/[id]
-export async function PUT(
-  req: NextRequest,
-  context: { params: { id: string } }
-) {
+// PUT /api/blog/comments/[id]
+export async function PUT(req: Request, { params }: { params: { id: string } }) {
   try {
-    const db = await sdb();
-    const { id } = await context.params;
-    const body: Partial<Comment> = await req.json();
-
-    const [exists] = await db.query<Comment[]>(
-      `SELECT * FROM comments WHERE id = "comments:${id}"`
-    );
-    if (!exists) {
-      return NextResponse.json(
-        { message: "Comment not found for update" },
-        { status: 404 }
-      );
+    const db = await sdb()
+    const body = await req.json()
+    const { id } = await params
+    // Check if the ID is valid
+    if (!id || typeof id !== 'string') {
+      console.error('Invalid ID:', id)
+      throw new Error('Invalid ID')
     }
+    CheckPostExists(id)
 
-    const updated = await db.patch(new RecordId("comments", id), [
-      {
-        op: "replace",
-        path: "/post_ref",
-        value: body.post_ref ? new RecordId("posts", body.post_ref) : undefined,
-      },
-      {
-        op: "replace",
-        path: "/user_ref",
-        value: body.user_ref ? new RecordId("users", body.user_ref) : undefined,
-      },
-      {
-        op: "replace",
-        path: "/content",
-        value: body.content,
-      },
-      {
-        op: "replace",
-        path: "/updatedAt",
-        value: new Date().toISOString(),
-      },
-    ]);
-    if (!updated) {
-      return NextResponse.json(
-        { message: "An issue occurred while updating the record" },
-        { status: 400 }
-      );
-    }
-    const [newRecord] = await db.query<Comment[]>(
-      `SELECT * FROM comments WHERE id = "comments:${id}"`
-    );
-    if (!newRecord) {
-      return NextResponse.json(
-        { message: "An issue occurred while fetching the updated record" },
-        { status: 400 }
-      );
-    }
+    const { post_ref, content, user_ref } = body
+    const validatedBody = CommentSchemaUpdate.parse({ content })
+    const updates: Patch[] = []
+    if (content)
+      updates.push({
+        op: 'replace',
+        path: '/content',
+        value: validatedBody.content,
+      })
+    if (post_ref)
+      updates.push({
+        op: 'replace',
+        path: '/post_ref',
+        value: new RecordId('posts', post_ref),
+      })
+    if (user_ref)
+      updates.push({
+        op: 'replace',
+        path: '/user_ref',
+        value: new RecordId('users', user_ref),
+      })
+    updates.push({
+      op: 'replace',
+      path: '/updated_at',
+      value: new Date(),
+    })
 
-    return NextResponse.json(updated, { status: 200 });
+    const recordId = new RecordId('comments', id)
+
+    // Apply the patch
+    const updatedComment = await db.patch(recordId, updates)
+
+    return NextResponse.json(updatedComment, {
+      status: 200,
+    })
   } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { message: "An error occurred", error: errorMessage },
+      { error: 'Failed to update comment', details: (error as Error).message },
+      {
+        status: 500,
+      }
+    )
+  }
+}
+// DELETE /api/blog/comments/[id]
+export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+  try {
+    const db = await sdb()
+    const { id } = await params
+
+    CheckPostExists(id)
+
+    // Delete the comment
+    await db.delete(new RecordId('comments', id))
+
+    return NextResponse.json({ message: 'Comments deleted successfully.' }, { status: 200 })
+  } catch (error: unknown) {
+    return NextResponse.json(
+      {
+        error: {
+          code: 'internal_server_error',
+          message: 'Failed to delete comment.',
+          details: (error as Error).message,
+        },
+      },
       { status: 500 }
-    );
+    )
   }
 }
 
-// DELETE /api/comments/[id]
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const db = await sdb();
-    const { id } = await params;
-    const deleted = await db.delete(new RecordId("comments", id));
-
-    if (!deleted) {
-      return NextResponse.json(
-        { message: "An issue occurred while deleting the record" },
-        { status: 400 }
-      );
-    }
-
+// Helper function to check if a post exists
+async function CheckPostExists(id: string) {
+  const db = await sdb()
+  const postExists = await db.select(new RecordId('comments', id))
+  if (!postExists || postExists.length === 0) {
     return NextResponse.json(
-      { message: "Record successfully deleted" },
-      { status: 200 }
-    );
-  } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json(
-      { message: "An error occurred", error: errorMessage },
-      { status: 500 }
-    );
+      {
+        error: {
+          code: 'not_found',
+          message: `Comments with ID comment:${id} does not exist.`,
+        },
+      },
+      { status: 404 }
+    )
   }
 }

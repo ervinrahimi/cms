@@ -1,109 +1,125 @@
-import { NextRequest, NextResponse } from "next/server";
-import sdb from "@/db/surrealdb";
-import { Tag } from "@/types/types";
-import { RecordId } from "surrealdb";
-
+import { NextResponse } from 'next/server'
+import sdb from '@/db/surrealdb' // Import SurrealDB connection
+import { Patch, RecordId } from 'surrealdb'
+import { TagSchemaUpdate } from '@/schemas/zod/blog'
 /*
-  Route: "api/tags/[id]" [ PUT - GET - DELETE ]
+  Route: "api/blog/tags/[id]" [ PUT - GET - DELETE ]
  
  GET: API handler for fetching a specific tag from the "tags" table in SurrealDB.
  PUT: API handler for updating a specific tag in the "tags" table in SurrealDB.
  DELETE: API handler for deleting a specific tag from the "tags" table in SurrealDB.
  */
 
-// GET /api/tags/[id]
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+// GET /api/blog/tag/[id]
+export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
-    const db = await sdb();
-    const { id } = await params;
-    const result = await db.query<Tag[]>(
-      `SELECT * FROM tags WHERE id = tags:${id}`
-    );
-    if (!result || result.length == 0) {
-      return NextResponse.json({ message: "Tag not found" }, { status: 404 });
-    }
-    return NextResponse.json(result[0], { status: 200 });
+    const db = await sdb()
+    const { id } = await params
+    CheckPostExists(id)
+
+    const tag = await db.select(new RecordId('tags', id))
+
+    return NextResponse.json(tag, { status: 200 })
   } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { message: "An error occurred", error: errorMessage },
-      { status: 500 }
-    );
+      { error: 'Failed to fetch tag', details: (error as Error).message },
+      {
+        status: 500,
+      }
+    )
   }
 }
 
-// PUT /api/tags/[id]
-export async function PUT(
-  req: NextRequest,
-  context: { params: { id: string } }
-) {
+// PUT /api/blog/tag/[id]
+export async function PUT(req: Request, { params }: { params: { id: string } }) {
   try {
-    const db = await sdb();
-    const { id } = await context.params;
-    const body: Partial<Tag> = await req.json();
+    const db = await sdb()
+    const body = await req.json()
+    const { id } = await params
+    // Check if the ID is valid
+    if (!id || typeof id !== 'string') {
+      console.error('Invalid ID:', id)
+      throw new Error('Invalid ID')
+    }
+    CheckPostExists(id)
 
-    const [exists] = await db.query<Tag[]>(
-      `SELECT * FROM tags WHERE id = "tags:${id}"`
-    );
-    if (!exists) {
-      return NextResponse.json(
-        { message: "Tag not found for update" },
-        { status: 404 }
-      );
-    }
-    const updated = await db.patch(new RecordId("tags", id), [
-      { op: "replace", path: "/name", value: body.name },
-      { op: "replace", path: "/slug", value: body.slug },
-      { op: "replace", path: "/updatedAt", value: new Date().toISOString() },
-    ]);
-    if (!updated) {
-      return NextResponse.json(
-        { message: "An issue occurred while updating the record" },
-        { status: 400 }
-      );
-    }
-    return NextResponse.json(updated, { status: 200 });
+    const { name, slug } = body
+    const validatedBody = TagSchemaUpdate.parse({ name, slug })
+    const updates: Patch[] = []
+    if (name)
+      updates.push({
+        op: 'replace',
+        path: '/name',
+        value: validatedBody.name,
+      })
+    if (slug)
+      updates.push({
+        op: 'replace',
+        path: '/slug',
+        value: validatedBody.slug,
+      })
+    updates.push({
+      op: 'replace',
+      path: '/updated_at',
+      value: new Date(),
+    })
+
+    const recordId = new RecordId('tags', id)
+
+    // Apply the patch
+    const updatedTag = await db.patch(recordId, updates)
+
+    return NextResponse.json(updatedTag, {
+      status: 200,
+    })
   } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { message: "An error occurred", error: errorMessage },
+      { error: 'Failed to update tag', details: (error as Error).message },
+      {
+        status: 500,
+      }
+    )
+  }
+}
+// DELETE /api/blog/tags/[id]
+export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+  try {
+    const db = await sdb()
+    const { id } = await params
+
+    CheckPostExists(id)
+
+    // Delete the tag
+    await db.delete(new RecordId('tags', id))
+
+    return NextResponse.json({ message: 'tags deleted successfully.' }, { status: 200 })
+  } catch (error: unknown) {
+    return NextResponse.json(
+      {
+        error: {
+          code: 'internal_server_error',
+          message: 'Failed to delete tags.',
+          details: (error as Error).message,
+        },
+      },
       { status: 500 }
-    );
+    )
   }
 }
 
-// DELETE /api/tags/[id]
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const db = await sdb();
-    const { id } = await params;
-    const deleted = await db.delete(new RecordId("tags", id));
-
-    if (!deleted) {
-      return NextResponse.json(
-        { message: "An issue occurred while deleting the record" },
-        { status: 400 }
-      );
-    }
-
+// Helper function to check if a post exists
+async function CheckPostExists(id: string) {
+  const db = await sdb()
+  const postExists = await db.select(new RecordId('tags', id))
+  if (!postExists || postExists.length === 0) {
     return NextResponse.json(
-      { message: "Record successfully deleted" },
-      { status: 200 }
-    );
-  } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json(
-      { message: "An error occurred", error: errorMessage },
-      { status: 500 }
-    );
+      {
+        error: {
+          code: 'not_found',
+          message: `tags with ID tag:${id} does not exist.`,
+        },
+      },
+      { status: 404 }
+    )
   }
 }

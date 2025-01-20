@@ -3,32 +3,32 @@ import { RecordId } from "surrealdb";
 import sdb from "@/db/surrealdb"; // Import SurrealDB connection
 
 /*
-  Route: "api/blog/likes" [ POST - GET ]
+  Route: "api/blog/bookmarks" [ POST - GET ]
  
- GET: API handler for fetching all likes from the "likes" table in SurrealDB.
- POST: API handler for creating a new like in the "likes" table in SurrealDB.
+ GET: API handler for fetching all bookmarks from the "bookmarks" table in SurrealDB.
+ POST: API handler for creating a new post in the "bookmarks" table in SurrealDB.
  
  */
 
-// GET /api/blog/likes
+// GET /api/blog/bookmarks
 export async function GET() {
   try {
     const db = await sdb();
-    const likes = await db.select("likes");
+    const bookmarks = await db.select("bookmarks");
 
-    return NextResponse.json(likes, {
+    return NextResponse.json(bookmarks, {
       status: 200,
     });
   } catch {
     return NextResponse.json(
-      { error: "Failed to fetch likes" },
+      { error: "Failed to fetch bookmarks" },
       {
         status: 500,
       }
     );
   }
 }
-// POST /api/blog/likes
+// POST /api/blog/bookmarks
 export async function POST(req: Request) {
   try {
     const db = await sdb();
@@ -46,26 +46,26 @@ export async function POST(req: Request) {
         );
       }
 
-    // Convert userref, postref and likes to RecordId objects
+    // Convert userref, postref and comments to RecordId objects
     const userref = new RecordId("users", user_ref);
     const postref = new RecordId("posts", post_ref);
 
-    const likeData = {
+    const bookmarksData = {
       user_ref: userref,
       post_ref: postref,
       created_at: new Date(),
       updated_at: new Date(),
     };
 
-    const createdLike = await db.create("likes", likeData);
+    const createdBookmarks = await db.create("bookmarks", bookmarksData);
 
-    return NextResponse.json(createdLike, {
+    return NextResponse.json(createdBookmarks, {
       status: 201,
     });
   } catch (error: unknown) {
     const err = error as Error;
     return NextResponse.json(
-      { error: "Failed to create likes", details: err.message },
+      { error: "Failed to create bookmarks", details: err.message },
       {
         status: 500,
       }

@@ -1,129 +1,131 @@
-import { NextRequest, NextResponse } from "next/server";
-import sdb from "@/db/surrealdb";
-import { Category } from "@/types/types";
-import { RecordId } from "surrealdb";
-import { CategorySchemaUpdate } from "@/schemas/zod/blog";
+import { NextResponse } from 'next/server'
+import sdb from '@/db/surrealdb' // Import SurrealDB connection
+import { Patch, RecordId } from 'surrealdb'
+import { CategorySchemaUpdate } from '@/schemas/zod/blog'
 /*
-  Route: "api/categories/[id]" [ GET - PUT - DELETE ]
+  Route: "api/blog/categories/[id]" [ PUT - GET - DELETE ]
  
  GET: API handler for fetching a specific category from the "categories" table in SurrealDB.
  PUT: API handler for updating a specific category in the "categories" table in SurrealDB.
  DELETE: API handler for deleting a specific category from the "categories" table in SurrealDB.
-
  */
 
-// GET /api/categories/[id]
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+// GET /api/blog/categories/[id]
+export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
-    const db = await sdb();
-    const { id } = await params;
-    const result = await db.query<Category[]>(
-      `SELECT * FROM categories WHERE id = categories:${id}`
-    );
-    if (!result || result.length == 0) {
-      return NextResponse.json(
-        { message: "Category not found" },
-        { status: 404 }
-      );
-    }
-    return NextResponse.json(result[0], { status: 200 });
+    const db = await sdb()
+    const { id } = await params
+    CheckPostExists(id)
+
+    const category = await db.select(new RecordId('categories', id))
+
+    return NextResponse.json(category, { status: 200 })
   } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { message: "An error occurred", error: errorMessage },
-      { status: 500 }
-    );
+      { error: 'Failed to fetch category', details: (error as Error).message },
+      {
+        status: 500,
+      }
+    )
   }
 }
 
-// PUT /api/categories/[id]
-export async function PUT(
-  req: NextRequest,
-  context: { params: { id: string } }
-) {
+// PUT /api/blog/categories/[id]
+export async function PUT(req: Request, { params }: { params: { id: string } }) {
   try {
-    const db = await sdb();
-    const { id } = await context.params;
-    const body: Partial<Category> = await req.json();
-
-    if (!body.title) {
-      return NextResponse.json(
-        { message: "The title field is required." },
-        { status: 400 }
-      );
+    const db = await sdb()
+    const body = await req.json()
+    const { id } = await params
+    // Check if the ID is valid
+    if (!id || typeof id !== 'string') {
+      console.error('Invalid ID:', id)
+      throw new Error('Invalid ID')
     }
+    CheckPostExists(id)
 
-    const [exists] = await db.query<Category[]>(
-      `SELECT * FROM categories WHERE id = "categories:${id}"`
-    );
-    if (!exists) {
-      return NextResponse.json(
-        { message: "The category to update was not found" },
-        { status: 404 }
-      );
-    }
-    const validatedBody = CategorySchemaUpdate.parse({
-      title: body.title,
-      description: body.description,
-      slug: body.slug,
-    });
-    const updated = await db.patch(new RecordId("categories", id), [
-      { op: "replace", path: "/title", value: validatedBody.title },
-      { op: "replace", path: "/description", value: validatedBody.description },
-      { op: "replace", path: "/slug", value: validatedBody.slug },
-      { op: "replace", path: "/updatedAt", value: new Date().toISOString() },
-    ]);
+    const { title, description, slug } = body
+    const validatedBody = CategorySchemaUpdate.parse({ title, description, slug })
+    const updates: Patch[] = []
+    if (title)
+      updates.push({
+        op: 'replace',
+        path: '/title',
+        value: validatedBody.title,
+      })
+    if (description)
+      updates.push({
+        op: 'replace',
+        path: '/description',
+        value: validatedBody.description,
+      })
+    if (slug)
+      updates.push({
+        op: 'replace',
+        path: '/slug',
+        value: validatedBody.slug,
+      })
+    updates.push({
+      op: 'replace',
+      path: '/updated_at',
+      value: new Date(),
+    })
 
-    if (!updated) {
-      return NextResponse.json(
-        { message: "An issue occurred while updating the record" },
-        { status: 400 }
-      );
-    }
+    const recordId = new RecordId('categories', id)
 
-    return NextResponse.json(updated, { status: 200 });
+    // Apply the patch
+    const updatedCategory = await db.patch(recordId, updates)
+
+    return NextResponse.json(updatedCategory, {
+      status: 200,
+    })
   } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { message: "An error occurred", error: errorMessage },
+      { error: 'Failed to update category', details: (error as Error).message },
+      {
+        status: 500,
+      }
+    )
+  }
+}
+// DELETE /api/blog/categories/[id]
+export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+  try {
+    const db = await sdb()
+    const { id } = await params
+
+    CheckPostExists(id)
+
+    // Delete the category
+    await db.delete(new RecordId('categories', id))
+
+    return NextResponse.json({ message: 'categories deleted successfully.' }, { status: 200 })
+  } catch (error: unknown) {
+    return NextResponse.json(
+      {
+        error: {
+          code: 'internal_server_error',
+          message: 'Failed to delete category.',
+          details: (error as Error).message,
+        },
+      },
       { status: 500 }
-    );
+    )
   }
 }
 
-// DELETE /api/categories/[id]
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const db = await sdb();
-    const { id } = await params;
-
-    const deleted = await db.delete(new RecordId("categories", id));
-
-    if (!deleted) {
-      return NextResponse.json(
-        { message: "An issue occurred while deleting the record" },
-        { status: 400 }
-      );
-    }
-
+// Helper function to check if a post exists
+async function CheckPostExists(id: string) {
+  const db = await sdb()
+  const postExists = await db.select(new RecordId('categories', id))
+  if (!postExists || postExists.length === 0) {
     return NextResponse.json(
-      { message: "Record successfully deleted" },
-      { status: 200 }
-    );
-  } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json(
-      { message: "An error occurred", error: errorMessage },
-      { status: 500 }
-    );
+      {
+        error: {
+          code: 'not_found',
+          message: `categories with ID comment:${id} does not exist.`,
+        },
+      },
+      { status: 404 }
+    )
   }
 }
