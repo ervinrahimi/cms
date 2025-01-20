@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import sdb from "@/db/surrealdb";
 import { Category } from "@/types/types";
 import { RecordId } from "surrealdb";
-import { CategorySchema } from "@/schemas/zod/blog";
+import { CategorySchemaUpdate } from "@/schemas/zod/blog";
 /*
   Route: "api/categories/[id]" [ GET - PUT - DELETE ]
  
@@ -66,7 +66,7 @@ export async function PUT(
         { status: 404 }
       );
     }
-    const validatedBody = CategorySchema.parse({
+    const validatedBody = CategorySchemaUpdate.parse({
       title: body.title,
       description: body.description,
       slug: body.slug,

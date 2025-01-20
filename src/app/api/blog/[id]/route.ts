@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
-import { Patch, RecordId } from "surrealdb";
-
 import sdb from "@/db/surrealdb"; // Import SurrealDB connection
-import { PostSchema } from "@/schemas/zod/blog";
-
+import { Patch, RecordId } from "surrealdb";
+import { PostSchemaUpdate } from "@/schemas/zod/blog";
 /*
   Route: "api/blog/[id]" [ PUT - GET - DELETE ]
  
@@ -45,45 +43,82 @@ export async function PUT(
     const body = await req.json();
     const { id } = await params;
     // Check if the ID is valid
-
+    if (!id || typeof id !== "string") {
+      console.error("Invalid ID:", id);
+      throw new Error("Invalid ID");
+    }
     CheckPostExists(id);
 
     const { title, content, slug, author, categories, tags, likes, comments } =
       body;
-    // Convert author, categories, tags, likes, and comments to RecordId objects
-    const authorId = new RecordId("users", author);
-    const categoryIds = categories.map(
-      (cat: string) => new RecordId("categories", cat)
-    );
-    const tagIds = tags.map((tag: string) => new RecordId("tags", tag));
-    const likeIds = likes.map((lik: string) => new RecordId("likes", lik));
-    const commentIds = comments.map(
-      (com: string) => new RecordId("comments", com)
-    );
+    const validatedBody = PostSchemaUpdate.parse({ title, content, slug });
+    const updates: Patch[] = [];
 
-    // Validate the request body
-    const validatedBody = PostSchema.parse({ title, content, slug });
-    // Update the post
-    console.log("Updating post with ID:", id);
-    const fieldsToUpdate = {
-      title: validatedBody.title,
-      content: validatedBody.content,
-      slug: validatedBody.slug,
-      updated_at: new Date(),
-      author: author && authorId,
-      categories: categories && categoryIds,
-      tags: tags && tagIds,
-      likes: likes && likeIds,
-      comments: comments && commentIds,
-    };
+    if (title)
+      updates.push({
+        op: "replace",
+        path: "/title",
+        value: validatedBody.title,
+      });
+    if (content)
+      updates.push({
+        op: "replace",
+        path: "/content",
+        value: validatedBody.content,
+      });
+    if (slug)
+      updates.push({
+        op: "replace",
+        path: "/slug",
+        value: validatedBody.slug,
+      });
+    if (author)
+      updates.push({
+        op: "replace",
+        path: "/author",
+        value: new RecordId("users", author),
+      });
+    if (categories)
+      updates.push({
+        op: "replace",
+        path: "/categories",
+        value: categories.map((cat: string) => new RecordId("categories", cat)),
+      });
+    if (tags)
+      updates.push({
+        op: "replace",
+        path: "/tags",
+        value: tags.map((tag: string) => new RecordId("tags", tag)),
+      });
 
-    const operations: Patch[] = Object.entries(fieldsToUpdate)
-      .filter(([, value]) => value !== undefined)
-      .map(([key, value]) => ({ op: "replace", path: `/${key}`, value }));
+    if (likes)
+      updates.push({
+        op: "replace",
+        path: "/likes",
+        value: likes.map((like: string) => new RecordId("likes", like)),
+      });
 
-    const updated = await db.patch(new RecordId("posts", id), operations);
+    if (comments)
+      updates.push({
+        op: "replace",
+        path: "/tags",
+        value: comments.map((com: string) => new RecordId("comments", com)),
+      });
 
-    return new Response(JSON.stringify(updated), { status: 200 });
+    updates.push({
+      op: "replace",
+      path: "/updated_at",
+      value: new Date(),
+    });
+
+    const recordId = new RecordId("posts", id);
+
+    // Apply the patch
+    const updatedPost = await db.patch(recordId, updates);
+
+    return NextResponse.json(updatedPost, {
+      status: 200,
+    });
   } catch (error: unknown) {
     return NextResponse.json(
       { error: "Failed to update post", details: (error as Error).message },
@@ -93,7 +128,6 @@ export async function PUT(
     );
   }
 }
-
 // DELETE /api/blog/[id]
 export async function DELETE(
   req: Request,

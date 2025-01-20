@@ -3,7 +3,7 @@ import { RecordId } from "surrealdb";
 
 import sdb from "@/db/surrealdb"; // Import SurrealDB connection
 
-import { PostSchema } from "@/schemas/zod/blog";
+import { PostSchemaCreate } from "@/schemas/zod/blog";
 
 /*
   Route: "api/blog" [ POST - GET ]
@@ -61,7 +61,7 @@ export async function POST(req: Request) {
     );
 
     // Create a record for the post
-    const validatedBody = PostSchema.parse({ title, content, slug });
+    const validatedBody = PostSchemaCreate.parse({ title, content, slug });
     const postData = {
       title: validatedBody.title,
       content: validatedBody.content,
