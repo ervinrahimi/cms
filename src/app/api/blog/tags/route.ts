@@ -1,38 +1,56 @@
-// File: /app/api/blog/tags/route.ts
-import { NextRequest, NextResponse } from 'next/server'
-import sdb from '@/db/surrealdb'
-import { Tag } from '@/types/types'
+import { NextRequest, NextResponse } from "next/server";
+import sdb from "@/db/surrealdb";
+import { Tag } from "@/types/types";
+
+/*
+  Route: "api/tags" [ POST - GET ]
+ 
+ GET: API handler for fetching all tags from the "tags" table in SurrealDB.
+ POST: API handler for creating a new tag in the "tags" table in SurrealDB.
+ 
+ */
 
 // GET /api/tags
 export async function GET() {
   try {
-    const db = await sdb()
-    const result = await db.select('tags')
+    const db = await sdb();
+    const result = await db.select("tags");
 
-    return NextResponse.json(result, { status: 200 })
+    return NextResponse.json(result, { status: 200 });
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    return NextResponse.json({ message: 'An error occurred', error: errorMessage }, { status: 500 })
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json(
+      { message: "An error occurred", error: errorMessage },
+      { status: 500 }
+    );
   }
 }
 
 // POST /api/tags
 export async function POST(req: NextRequest) {
   try {
-    const db = await sdb()
-    const body: Partial<Tag> = await req.json()
+    const db = await sdb();
+    const body: Partial<Tag> = await req.json();
     if (!body.name) {
-      return NextResponse.json({ message: 'The name field is required.' }, { status: 400 })
+      return NextResponse.json(
+        { message: "The name field is required." },
+        { status: 400 }
+      );
     }
-    const createdTag = await db.create('tags', {
+    const createdTag = await db.create("tags", {
       name: body.name,
       slug: body.slug,
       created_at: new Date(),
-    })
+    });
 
-    return NextResponse.json(createdTag, { status: 201 })
+    return NextResponse.json(createdTag, { status: 201 });
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    return NextResponse.json({ message: 'An error occurred', error: errorMessage }, { status: 500 })
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json(
+      { message: "An error occurred", error: errorMessage },
+      { status: 500 }
+    );
   }
 }
