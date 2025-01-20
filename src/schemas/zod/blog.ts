@@ -1,18 +1,17 @@
-//src/schemas/postSchemas.js
 import { z } from "zod";
 
-// Schema for creating a post
-export const PostCreateSchema = z.object({
-  title: z.string().nonempty({ message: "Title is required." }),
-  slug: z.string().nonempty({ message: "Slug is required." }),
-  content: z.string().nonempty({ message: "Content is required." }),
-  author: z.string().nonempty({ message: "Author is required." }),
+export const PostSchema = z.object({
+  title: z.string().min(3).nonempty("Title cannot be empty"),
+  content: z.string().min(50).nonempty("Content cannot be empty"),
+  slug: z.string().min(3).nonempty("Slug cannot be empty"),
 });
 
-// Schema for updating a post (all fields optional)
-export const PostUpdateSchema = z.object({
-  title: z.string().optional(),
-  slug: z.string().optional(),
-  content: z.string().optional(),
-  author: z.string().optional(),
+export const CategorySchema = z.object({
+  title: z.string().min(3).nonempty("Title cannot be empty"),
+  description: z.string().min(10).nonempty("Description cannot be empty"),
+  slug: z.string().min(3).nonempty("Slug cannot be empty"),
+});
+
+export const CommentSchema = z.object({
+  content: z.string().min(1).nonempty("Content cannot be empty"),
 });

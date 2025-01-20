@@ -87,6 +87,15 @@ export async function PUT(
         { status: 400 }
       );
     }
+    const [newRecord] = await db.query<Comment[]>(
+      `SELECT * FROM comments WHERE id = "comments:${id}"`
+    );
+    if (!newRecord) {
+      return NextResponse.json(
+        { message: "An issue occurred while fetching the updated record" },
+        { status: 400 }
+      );
+    }
 
     return NextResponse.json(updated, { status: 200 });
   } catch (error: unknown) {
@@ -117,7 +126,7 @@ export async function DELETE(
     }
 
     return NextResponse.json(
-      { message: "Record deleted successfully" },
+      { message: "Record successfully deleted" },
       { status: 200 }
     );
   } catch (error: unknown) {

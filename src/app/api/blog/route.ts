@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+
 import sdb from "@/db/surrealdb"; // Import SurrealDB connection
 import { RecordId } from "surrealdb";
+import { PostSchema } from "@/schemas/zod/blog";
 
 /*
   Route: "api/blog" [ POST - GET ]
@@ -56,12 +58,13 @@ export async function POST(req: Request) {
     const commentIds = comments.map(
       (com: string) => new RecordId("comments", com)
     );
-
+    // Validate the request body
+    const validatedBody = PostSchema.parse({ title, content, slug });
     // Create a record for the post
     const postData = {
-      title,
-      content,
-      slug,
+      title: validatedBody.title,
+      content: validatedBody.content,
+      slug: validatedBody.slug,
       author: authorId,
       categories: categoryIds,
       tags: tagIds,

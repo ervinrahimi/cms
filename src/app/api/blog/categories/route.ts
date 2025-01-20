@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import sdb from "@/db/surrealdb";
 import { Category } from "@/types/types";
+import { CategorySchema } from "@/schemas/zod/blog";
 
 /*
   Route: "api/categories" [ POST - GET ]
@@ -33,18 +34,19 @@ export async function POST(req: NextRequest) {
     const db = await sdb();
     const body: Partial<Category> = await req.json();
 
-    if (!body.title) {
-      return NextResponse.json(
-        { message: "The title field is required." },
-        { status: 400 }
-      );
-    }
-
-    const createdTag = await db.create("categories", {
+    // Validate the request body
+    const validatedBody = CategorySchema.parse({
       title: body.title,
       description: body.description,
       slug: body.slug,
+    });
+
+    const createdTag = await db.create("categories", {
+      title: validatedBody.title,
+      description: validatedBody.description,
+      slug: validatedBody.slug,
       created_at: new Date(),
+      update_at: new Date(),
     });
 
     return NextResponse.json(createdTag, { status: 201 });

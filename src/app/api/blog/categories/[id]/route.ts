@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import sdb from "@/db/surrealdb";
 import { Category } from "@/types/types";
 import { RecordId } from "surrealdb";
-
+import { CategorySchema } from "@/schemas/zod/blog";
 /*
   Route: "api/categories/[id]" [ GET - PUT - DELETE ]
  
@@ -66,11 +66,15 @@ export async function PUT(
         { status: 404 }
       );
     }
-
+    const validatedBody = CategorySchema.parse({
+      title: body.title,
+      description: body.description,
+      slug: body.slug,
+    });
     const updated = await db.patch(new RecordId("categories", id), [
-      { op: "replace", path: "/title", value: body.title },
-      { op: "replace", path: "/description", value: body.description },
-      { op: "replace", path: "/slug", value: body.slug },
+      { op: "replace", path: "/title", value: validatedBody.title },
+      { op: "replace", path: "/description", value: validatedBody.description },
+      { op: "replace", path: "/slug", value: validatedBody.slug },
       { op: "replace", path: "/updatedAt", value: new Date().toISOString() },
     ]);
 
