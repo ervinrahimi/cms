@@ -59,6 +59,8 @@ DEFINE FIELD updated_at ON categories
     VALUE time::now();
 // Define index id field for unique record
 DEFINE INDEX idx_categories_id ON categories FIELDS id UNIQUE;
+// Define index slug field for unique record
+DEFINE INDEX idx_categories_slug ON categories FIELDS slug UNIQUE;
 
 // ----------------------------------------------------------------------------------------
 
@@ -86,6 +88,8 @@ DEFINE FIELD updated_at ON tags
     VALUE time::now();
 // Define index id field for unique record
 DEFINE INDEX idx_tags_id ON tags FIELDS id UNIQUE;
+// Define index slug field for unique record
+DEFINE INDEX idx_tags_slug ON tags FIELDS slug UNIQUE;
 
 // ----------------------------------------------------------------------------------------
 
@@ -133,6 +137,8 @@ DEFINE FIELD updated_at ON posts
     VALUE time::now();
 // Define index id field for unique record
 DEFINE INDEX idx_posts_id ON posts FIELDS id UNIQUE;
+// Define index slug field for unique record
+DEFINE INDEX idx_posts_slug ON posts FIELDS slug UNIQUE;
 
 // ----------------------------------------------------------------------------------------
 
