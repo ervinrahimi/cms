@@ -1,21 +1,19 @@
-import { NextResponse } from "next/server";
 import sdb from "@/db/surrealdb";
-import { Patch, RecordId } from "surrealdb";
 import { TagSchemaUpdate } from "@/schemas/zod/blog";
 import { checkExists } from "@/utils/api/checkExists";
-import { ZodError } from "zod";
-import { handleZodError } from "@/utils/api/zod/errorHandler.ts";
 import prepareUpdates from "@/utils/api/generateUpdates";
 import tableNames from "@/utils/api/tableNames";
+import { handleZodError } from "@/utils/api/zod/errorHandler.ts";
+import { NextResponse } from "next/server";
+import { Patch, RecordId } from "surrealdb";
+import { ZodError } from "zod";
 
 /*
-
   Route: "api/blog/tags/[id]" [ PUT - GET - DELETE ]
  
   GET: API handler for fetching a specific tag from the "tags" table in SurrealDB.
   PUT: API handler for updating a specific tag in the "tags" table in SurrealDB.
   DELETE: API handler for deleting a specific tag from the "tags" table in SurrealDB.
-
  */
 
 export async function GET(

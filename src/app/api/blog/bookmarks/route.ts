@@ -1,18 +1,16 @@
-import { NextResponse } from "next/server";
-import { RecordId } from "surrealdb";
 import sdb from "@/db/surrealdb";
 import { bookmarksSchemaCreate } from "@/schemas/zod/blog";
-import { handleZodError } from "@/utils/api/zod/errorHandler.ts";
-import { ZodError } from "zod";
 import tableNames from "@/utils/api/tableNames";
+import { handleZodError } from "@/utils/api/zod/errorHandler.ts";
+import { NextResponse } from "next/server";
+import { RecordId } from "surrealdb";
+import { ZodError } from "zod";
 
 /*
-
   Route: "api/blog/bookmarks" [ POST - GET ]
  
   GET: API handler for fetching all bookmarks from the "bookmarks" table in SurrealDB.
   POST: API handler for creating a new post in the "bookmarks" table in SurrealDB.
- 
  */
 
 export async function GET() {

@@ -1,21 +1,19 @@
-import { NextResponse } from "next/server";
 import sdb from "@/db/surrealdb";
-import { Patch, RecordId } from "surrealdb";
 import { CommentSchemaUpdate } from "@/schemas/zod/blog";
 import { checkExists } from "@/utils/api/checkExists";
-import { ZodError } from "zod";
-import { handleZodError } from "@/utils/api/zod/errorHandler.ts";
 import prepareUpdates from "@/utils/api/generateUpdates";
 import tableNames from "@/utils/api/tableNames";
+import { handleZodError } from "@/utils/api/zod/errorHandler.ts";
+import { NextResponse } from "next/server";
+import { Patch, RecordId } from "surrealdb";
+import { ZodError } from "zod";
 
 /*
-
   Route: "api/blog/[id]" [ PUT - GET - DELETE ]
  
   GET: API handler for fetching a specific comment from the "comments" table in SurrealDB.
   PUT: API handler for updating a specific comment in the "comments" table in SurrealDB.
   DELETE: API handler for deleting a specific comment from the "comments" table in SurrealDB.
-
  */
 
 export async function GET(

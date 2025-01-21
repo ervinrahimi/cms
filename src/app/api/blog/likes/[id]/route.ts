@@ -1,16 +1,14 @@
-import { NextResponse } from "next/server";
 import sdb from "@/db/surrealdb";
-import { RecordId } from "surrealdb";
 import { checkExists } from "@/utils/api/checkExists";
 import tableNames from "@/utils/api/tableNames";
+import { NextResponse } from "next/server";
+import { RecordId } from "surrealdb";
 
 /*
-
   Route: "api/blog/likes/[id]" [ PUT - GET - DELETE ]
  
   GET: API handler for fetching a specific like from the "likes" table in SurrealDB.
   DELETE: API handler for deleting a specific like from the "likes" table in SurrealDB.
-
  */
 
 export async function GET(

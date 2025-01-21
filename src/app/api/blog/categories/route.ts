@@ -1,17 +1,15 @@
-import { NextRequest, NextResponse } from "next/server";
 import sdb from "@/db/surrealdb";
 import { CategorySchemaCreate } from "@/schemas/zod/blog";
-import { ZodError } from "zod";
-import { handleZodError } from "@/utils/api/zod/errorHandler.ts";
 import tableNames from "@/utils/api/tableNames";
+import { handleZodError } from "@/utils/api/zod/errorHandler.ts";
+import { NextRequest, NextResponse } from "next/server";
+import { ZodError } from "zod";
 
 /*
-
   Route: "api/blog/categories" [ POST - GET ]
  
   GET: API handler for fetching all categories from the "categories" table in SurrealDB.
   POST: API handler for creating a new category in the "categories" table in SurrealDB.
- 
  */
 
 export async function GET() {

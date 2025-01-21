@@ -1,18 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
 import sdb from "@/db/surrealdb";
-import { RecordId } from "surrealdb";
 import { CommentSchemaCreate } from "@/schemas/zod/blog";
-import { ZodError } from "zod";
-import { handleZodError } from "@/utils/api/zod/errorHandler.ts";
 import tableNames from "@/utils/api/tableNames";
+import { handleZodError } from "@/utils/api/zod/errorHandler.ts";
+import { NextRequest, NextResponse } from "next/server";
+import { RecordId } from "surrealdb";
+import { ZodError } from "zod";
 
 /*
-
   Route: "api/blog/comments" [ POST - GET ]
  
  GET: API handler for fetching all comments from the "comments" table in SurrealDB.
  POST: API handler for creating a new comment in the "comments" table in SurrealDB.
-
  */
 
 // GET /api/blog/comments

@@ -1,18 +1,16 @@
-import { NextResponse } from "next/server";
-import { RecordId } from "surrealdb";
 import sdb from "@/db/surrealdb";
 import { PostSchemaCreate } from "@/schemas/zod/blog";
-import { ZodError } from "zod";
-import { handleZodError } from "@/utils/api/zod/errorHandler.ts";
 import tableNames from "@/utils/api/tableNames";
+import { handleZodError } from "@/utils/api/zod/errorHandler.ts";
+import { NextResponse } from "next/server";
+import { RecordId } from "surrealdb";
+import { ZodError } from "zod";
 
 /*
-
   Route: "api/blog" [ POST - GET ]
  
   GET: API handler for fetching all posts from the "posts" table in SurrealDB.
   POST: API handler for creating a new post in the "posts" table in SurrealDB.
- 
  */
 
 export async function GET() {

@@ -5,13 +5,11 @@ import { checkExists } from "@/utils/api/checkExists";
 import tableNames from "@/utils/api/tableNames";
 
 /*
-
   Route: "api/blog/bookmarks/[id]" [ PUT - GET - DELETE ]
  
   GET: API handler for fetching a specific bookmark from the "bookmarks" table in SurrealDB.
   PUT: API handler for updating a specific bookmark in the "bookmarks" table in SurrealDB.
   DELETE: API handler for deleting a specific bookmark from the "bookmarks" table in SurrealDB.
-
  */
 
 export async function GET(

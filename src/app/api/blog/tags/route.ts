@@ -1,16 +1,15 @@
-import { NextRequest, NextResponse } from "next/server";
 import sdb from "@/db/surrealdb";
 import { TagSchemaCreate } from "@/schemas/zod/blog";
 import tableNames from "@/utils/api/tableNames";
-import { ZodError } from "zod";
 import { handleZodError } from "@/utils/api/zod/errorHandler.ts";
-/*
+import { NextRequest, NextResponse } from "next/server";
+import { ZodError } from "zod";
 
+/*
   Route: "api/blog/tags" [ POST - GET ]
  
   GET: API handler for fetching all tags from the "tags" table in SurrealDB.
   POST: API handler for creating a new tag in the "tags" table in SurrealDB.
- 
  */
 
 export async function GET() {
