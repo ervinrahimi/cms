@@ -1,218 +1,208 @@
-// Create a schemafull table user with name "users"
-DEFINE TABLE users SCHEMAFULL 
+// Create a schemafull table User with name "User"
+DEFINE TABLE User SCHEMAFULL 
     PERMISSIONS
         FOR select, create, update, delete
         FULL; 
-// Create id field on users table with assertation string datatype
-DEFINE FIELD id ON users TYPE string ASSERT $value != NONE;
-// Create display_name field on users table with assertation string datatype
-DEFINE FIELD display_name ON users 
-    TYPE string 
-    ASSERT $value != none;
-// Create email field on users table with string with assertation email datatype
-DEFINE FIELD email ON users 
-    TYPE string 
-    ASSERT string::is::email($value);
-// Create hashed_password field on users table with assertation string datatype
-DEFINE FIELD hashed_password ON users 
-    TYPE string 
-    ASSERT $value != none;
-// Create created_at field on users table with assertation datetime datatype
-DEFINE FIELD created_at ON users 
+// Create id field on User table with assertation string datatype
+DEFINE FIELD id ON User TYPE string ASSERT $value != NONE;
+// Create clerk_id field on User table with assertation string datatype
+DEFINE FIELD clerk_id ON User TYPE string ASSERT $value != NONE;
+// Create created_at field on User table with assertation datetime datatype
+DEFINE FIELD created_at ON User 
     TYPE datetime;
-// Create updated_at field on users table with datetime datatype
-DEFINE FIELD updated_at ON users 
+// Create updated_at field on User table with datetime datatype
+DEFINE FIELD updated_at ON User 
     TYPE datetime 
     VALUE time::now();
-// Define index email field for unique record
-DEFINE INDEX idx_users_email ON users FIELDS email UNIQUE;
 // Define index id field for unique record
-DEFINE INDEX idx_users_id ON users FIELDS id UNIQUE;
+DEFINE INDEX idx_User_id ON User FIELDS id UNIQUE;
+// Define index clerk_id field for unique record
+DEFINE INDEX idx_User_clerk_id ON User FIELDS clerk_id UNIQUE;
 
 // ----------------------------------------------------------------------------------------
 
-// Create a schemafull table category with name "categories"
-DEFINE TABLE categories SCHEMAFULL
+// Create a schemafull table category with name "BlogCategory"
+DEFINE TABLE BlogCategory SCHEMAFULL
     PERMISSIONS
         FOR select, create, update, delete
         FULL;
-// Create id field on categories table with assertation string datatype
-DEFINE FIELD id ON categories TYPE string ASSERT $value != NONE;
-// Create title field on categories table with assertation string datatype
-DEFINE FIELD title ON categories 
+// Create id field on BlogCategory table with assertation string datatype
+DEFINE FIELD id ON BlogCategory TYPE string ASSERT $value != NONE;
+// Create title field on BlogCategory table with assertation string datatype
+DEFINE FIELD title ON BlogCategory 
     TYPE string 
     ASSERT $value != none;
-// Create slug field on tags table with assertation string datatype
-DEFINE FIELD slug ON categories
+// Create slug field on BlogCategory table with assertation string datatype
+DEFINE FIELD slug ON BlogCategory
     TYPE string 
     ASSERT $value != none;
-// Create description field on categories table with assertation string datatype
-DEFINE FIELD description ON categories 
+// Create description field on BlogCategory table with assertation string datatype
+DEFINE FIELD description ON BlogCategory 
     TYPE string 
     ASSERT $value != none;
-// Create created_at field on categories table with datetime datatype
-DEFINE FIELD created_at ON categories 
+// Create created_at field on BlogCategory table with datetime datatype
+DEFINE FIELD created_at ON BlogCategory 
     TYPE datetime;
-// Create updated_at field on categories table with datetime datatype
-DEFINE FIELD updated_at ON categories 
+// Create updated_at field on BlogCategory table with datetime datatype
+DEFINE FIELD updated_at ON BlogCategory 
     TYPE datetime 
     VALUE time::now();
 // Define index id field for unique record
-DEFINE INDEX idx_categories_id ON categories FIELDS id UNIQUE;
+DEFINE INDEX idx_BlogCategory_id ON BlogCategory FIELDS id UNIQUE;
 // Define index slug field for unique record
-DEFINE INDEX idx_categories_slug ON categories FIELDS slug UNIQUE;
+DEFINE INDEX idx_BlogCategory_slug ON BlogCategory FIELDS slug UNIQUE;
 
 // ----------------------------------------------------------------------------------------
 
-// Create a schemafull table tag with name "tags"
-DEFINE TABLE tags SCHEMAFULL
+// Create a schemafull table tag with name "BlogTag"
+DEFINE TABLE BlogTag SCHEMAFULL
     PERMISSIONS
         FOR select, create, update, delete
         FULL;
-// Create id field on tags table with assertation string datatype
-DEFINE FIELD id ON tags TYPE string ASSERT $value != NONE;
-// Create slug field on tags table with assertation string datatype
-DEFINE FIELD slug ON tags
+// Create id field on BlogTag table with assertation string datatype
+DEFINE FIELD id ON BlogTag TYPE string ASSERT $value != NONE;
+// Create slug field on BlogTag table with assertation string datatype
+DEFINE FIELD slug ON BlogTag
     TYPE string 
     ASSERT $value != none; 
-// Create name field on tags table with assertation string datatype
-DEFINE FIELD name ON tags
+// Create name field on BlogTag table with assertation string datatype
+DEFINE FIELD name ON BlogTag
     TYPE string
     ASSERT $value != none;
-// Create created_at field on tags table with datetime datatype
-DEFINE FIELD created_at ON tags
+// Create created_at field on BlogTag table with datetime datatype
+DEFINE FIELD created_at ON BlogTag
     TYPE datetime;
-// Create updated_at field on tags table with datetime datatype
-DEFINE FIELD updated_at ON tags
+// Create updated_at field on BlogTag table with datetime datatype
+DEFINE FIELD updated_at ON BlogTag
     TYPE datetime
     VALUE time::now();
 // Define index id field for unique record
-DEFINE INDEX idx_tags_id ON tags FIELDS id UNIQUE;
+DEFINE INDEX idx_BlogTag_id ON BlogTag FIELDS id UNIQUE;
 // Define index slug field for unique record
-DEFINE INDEX idx_tags_slug ON tags FIELDS slug UNIQUE;
+DEFINE INDEX idx_BlogTag_slug ON BlogTag FIELDS slug UNIQUE;
 
 // ----------------------------------------------------------------------------------------
 
-// Create a schemafull table post with name "posts"
-DEFINE TABLE posts SCHEMAFULL
+// Create a schemafull table post with name "BlogPost"
+DEFINE TABLE BlogPost SCHEMAFULL
     PERMISSIONS
         FOR select, create, update, delete
         FULL;
-// Create id field on posts table with assertation string datatype
-DEFINE FIELD id ON posts TYPE string ASSERT $value != NONE;
-// Create title field on posts table with assertation string datatype
-DEFINE FIELD title ON posts 
+// Create id field on BlogPost table with assertation string datatype
+DEFINE FIELD id ON BlogPost TYPE string ASSERT $value != NONE;
+// Create title field on BlogPost table with assertation string datatype
+DEFINE FIELD title ON BlogPost 
     TYPE string 
     ASSERT $value != none;
-// Create content field on posts table with assertation string datatype
-DEFINE FIELD content ON posts 
+// Create content field on BlogPost table with assertation string datatype
+DEFINE FIELD content ON BlogPost 
     TYPE string 
     ASSERT $value != none;
-// Create slug field on posts table with assertation string datatype
-DEFINE FIELD slug ON posts
+// Create slug field on BlogPost table with assertation string datatype
+DEFINE FIELD slug ON BlogPost
     TYPE string 
     ASSERT $value != none; 
-// Create author field on posts table with assertaion and have relation with users table 
-DEFINE FIELD author ON posts
-    TYPE record<users>
+// Create author field on BlogPost table with assertaion and have relation with User table 
+DEFINE FIELD author ON BlogPost
+    TYPE record<User>
     ASSERT $value != none;
-// Create categories field on posts table with assertation and have relation with categories table
-DEFINE FIELD categories ON posts
-    TYPE array<record<categories>>;
-// Create likes field on posts table with assertation and have relation with likes table
-DEFINE FIELD likes ON posts
-    TYPE array<record<likes>>;
-// Create comments field on posts table with assertation and have relation with comments table
-DEFINE FIELD comments ON posts
-    TYPE array<record<comments>>;
-// Create tags field on posts table with assertation and have relation with tags table
-DEFINE FIELD tags ON posts
-    TYPE array<record<tags>>;
-// Create created_at on posts table with datetime datatype
-DEFINE FIELD created_at ON posts 
+// Create categories field on BlogPost table with assertation and have relation with BlogCategory table
+DEFINE FIELD categories ON BlogPost
+    TYPE array<record<BlogCategory>>;
+// Create likes field on BlogPost table with assertation and have relation with BlogLike table
+DEFINE FIELD likes ON BlogPost
+    TYPE array<record<BlogLike>>;
+// Create comments field on BlogPost table with assertation and have relation with BlogComment table
+DEFINE FIELD comments ON BlogPost
+    TYPE array<record<BlogComment>>;
+// Create tags field on BlogPost table with assertation and have relation with BlogTag table
+DEFINE FIELD tags ON BlogPost
+    TYPE array<record<BlogTag>>;
+// Create created_at on BlogPost table with datetime datatype
+DEFINE FIELD created_at ON BlogPost 
     TYPE datetime;
-// Create updated_at on posts table with datetime datatype
-DEFINE FIELD updated_at ON posts 
+// Create updated_at on BlogPost table with datetime datatype
+DEFINE FIELD updated_at ON BlogPost 
     TYPE datetime 
     VALUE time::now();
 // Define index id field for unique record
-DEFINE INDEX idx_posts_id ON posts FIELDS id UNIQUE;
+DEFINE INDEX idx_BlogPost_id ON BlogPost FIELDS id UNIQUE;
 // Define index slug field for unique record
-DEFINE INDEX idx_posts_slug ON posts FIELDS slug UNIQUE;
+DEFINE INDEX idx_BlogPost_slug ON BlogPost FIELDS slug UNIQUE;
 
 // ----------------------------------------------------------------------------------------
 
-// Create a schemafull table comment with name "comments"
-DEFINE TABLE comments SCHEMAFULL
+// Create a schemafull table comment with name "BlogComment"
+DEFINE TABLE BlogComment SCHEMAFULL
     PERMISSIONS
         FOR select, create, update, delete
         FULL;
-// Create id field on comments table with assertation string datatype
-DEFINE FIELD id On comments TYPE string ASSERT $value != NONE;
-// Create post_ref field on comments table with assertation and have relation with posts table
-DEFINE FIELD post_ref ON comments
-    TYPE record<posts>
+// Create id field on BlogComment table with assertation string datatype
+DEFINE FIELD id On BlogComment TYPE string ASSERT $value != NONE;
+// Create post_ref field on BlogComment table with assertation and have relation with BlogPost table
+DEFINE FIELD post_ref ON BlogComment
+    TYPE record<BlogPost>
     ASSERT $value != none;
-// Create user_ref field on comments table with assertation and have relation with users table
-DEFINE FIELD user_ref ON comments
-    TYPE record<users>
+// Create user_ref field on BlogComment table with assertation and have relation with User table
+DEFINE FIELD user_ref ON BlogComment
+    TYPE record<User>
     ASSERT $value != none;
-// Create content field on comments table with assertation string datatype
-DEFINE FIELD content ON comments
+// Create content field on BlogComment table with assertation string datatype
+DEFINE FIELD content ON BlogComment
     TYPE string
     ASSERT $value != none;
-// Create created_at field on comments table with assertation datetime datatype
-DEFINE FIELD created_at ON comments
+// Create created_at field on BlogComment table with assertation datetime datatype
+DEFINE FIELD created_at ON BlogComment
     TYPE datetime;
-// Create updated_at field on comments table with assertation datetime datatype
-DEFINE FIELD updated_at ON comments
+// Create updated_at field on BlogComment table with assertation datetime datatype
+DEFINE FIELD updated_at ON BlogComment
     TYPE datetime
     VALUE time::now();
 // Define index id field for unique record
-DEFINE INDEX idx_comments_id ON comments FIELDS id UNIQUE;
+DEFINE INDEX idx_BlogComment_id ON BlogComment FIELDS id UNIQUE;
 
 // ----------------------------------------------------------------------------------------
 
-// Create a schemafull table like with name "likes"
-DEFINE TABLE likes SCHEMAFULL
+// Create a schemafull table like with name "BlogLike"
+DEFINE TABLE BlogLike SCHEMAFULL
     PERMISSIONS
         FOR select, create, update, delete
         FULL;
-// Create id field on likes table with assertation string datatype
-DEFINE FIELD id ON likes TYPE string ASSERT $value != NONE;
-// Create post_ref field on likes table with assertation and have relation with posts table
-DEFINE FIELD post_ref ON likes
-    TYPE record<posts>
+// Create id field on BlogLike table with assertation string datatype
+DEFINE FIELD id ON BlogLike TYPE string ASSERT $value != NONE;
+// Create post_ref field on BlogLike table with assertation and have relation with BlogPost table
+DEFINE FIELD post_ref ON BlogLike
+    TYPE record<BlogPost>
     ASSERT $value != none;
-// Create user_ref field on likes table with assertation and have relation with users table
-DEFINE FIELD user_ref ON likes
-    TYPE record<users>
+// Create user_ref field on BlogLike table with assertation and have relation with User table
+DEFINE FIELD user_ref ON BlogLike
+    TYPE record<User>
     ASSERT $value != none;
-// Create created_at fieldn on likes table with datetime datatype
-DEFINE FIELD created_at ON likes
+// Create created_at field on BlogLike table with datetime datatype
+DEFINE FIELD created_at ON BlogLike
     TYPE datetime;
 // Define index id field for unique record
-DEFINE INDEX idx_likes_id ON likes FIELDS id UNIQUE;
+DEFINE INDEX idx_likes_id ON BlogLike FIELDS id UNIQUE;
 
 // ----------------------------------------------------------------------------------------
 
-// Create a schemafull table bookmark with name "bookmarks"
-DEFINE TABLE bookmarks SCHEMAFULL
+// Create a schemafull table bookmark with name "BlogBookmark"
+DEFINE TABLE BlogBookmark SCHEMAFULL
     PERMISSIONS
         FOR select, create, update, delete
         FULL;
-// Create id field on bookmarks table with assertation string datatype
-DEFINE FIELD id ON bookmarks TYPE string ASSERT $value != NONE;
-// Create user_ref field on bookmarks table with assertation and have relation with users table
-DEFINE FIELD user_ref ON bookmarks
-    TYPE record<users>
+// Create id field on BlogBookmark table with assertation string datatype
+DEFINE FIELD id ON BlogBookmark TYPE string ASSERT $value != NONE;
+// Create user_ref field on BlogBookmark table with assertation and have relation with User table
+DEFINE FIELD user_ref ON BlogBookmark
+    TYPE record<User>
     ASSERT $value != none;
-// Create post_ref field on bookmarks table with assertaion and have relation with posts table
-DEFINE FIELD post_ref ON bookmarks
-    TYPE record<posts>
+// Create post_ref field on BlogBookmark table with assertaion and have relation with BlogPost table
+DEFINE FIELD post_ref ON BlogBookmark
+    TYPE record<BlogPost>
     ASSERT $value != none;
-// Create created_at field on bookmarks table with datetime datatype
-DEFINE FIELD created_at ON bookmarks
+// Create created_at field on BlogBookmark table with datetime datatype
+DEFINE FIELD created_at ON BlogBookmark
     TYPE datetime;
 // Define index id field for unique record
-DEFINE INDEX idx_bookmarks_id ON bookmarks FIELDS id UNIQUE;
+DEFINE INDEX idx_BlogBookmark_id ON BlogBookmark FIELDS id UNIQUE;
