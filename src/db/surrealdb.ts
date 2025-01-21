@@ -9,10 +9,6 @@ const DB_PASS = process.env.DB_PASS!;
 const DB_NAME = process.env.DB_NAME!;
 const DB_NAMESPACE = process.env.DB_NAMESPACE!;
 
-if (!DB_URL || !DB_USER || !DB_PASS || !DB_NAME || !DB_NAMESPACE) {
-  throw new Error("Environment variables are required.");
-}
-
 // Singleton instance to cache the database connection
 let dbInstance: Surreal | null = null;
 

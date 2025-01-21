@@ -1,20 +1,24 @@
 import { NextResponse } from "next/server";
 import { RecordId } from "surrealdb";
-import sdb from "@/db/surrealdb"; // Import SurrealDB connection
+import sdb from "@/db/surrealdb";
+import { bookmarksSchemaCreate } from "@/schemas/zod/blog";
+import { handleZodError } from "@/utils/api/zod/errorHandler.ts";
+import { ZodError } from "zod";
+import tableNames from "@/utils/api/tableNames";
 
 /*
+
   Route: "api/blog/bookmarks" [ POST - GET ]
  
- GET: API handler for fetching all bookmarks from the "bookmarks" table in SurrealDB.
- POST: API handler for creating a new post in the "bookmarks" table in SurrealDB.
+  GET: API handler for fetching all bookmarks from the "bookmarks" table in SurrealDB.
+  POST: API handler for creating a new post in the "bookmarks" table in SurrealDB.
  
  */
 
-// GET /api/blog/bookmarks
 export async function GET() {
   try {
     const db = await sdb();
-    const bookmarks = await db.select("bookmarks");
+    const bookmarks = await db.select(tableNames.bookmark);
 
     return NextResponse.json(bookmarks, {
       status: 200,
@@ -28,41 +32,37 @@ export async function GET() {
     );
   }
 }
-// POST /api/blog/bookmarks
+
 export async function POST(req: Request) {
   try {
     const db = await sdb();
     const body = await req.json();
+    const validatedBody = bookmarksSchemaCreate.parse(body);
+    const { user_ref, post_ref } = validatedBody;
 
-    const { user_ref, post_ref } =
-      body;
-
-      if (!user_ref || !post_ref) {
-        return NextResponse.json(
-          { error: "Missing required fields" },
-          {
-            status: 400,
-          }
-        );
-      }
-
-    // Convert userref, postref and comments to RecordId objects
-    const userref = new RecordId("users", user_ref);
-    const postref = new RecordId("posts", post_ref);
+    // Convert user_ref, post_ref and comments to RecordId objects
+    const userId = new RecordId(tableNames.user, user_ref);
+    const postId = new RecordId(tableNames.post, post_ref);
 
     const bookmarksData = {
-      user_ref: userref,
-      post_ref: postref,
+      user_ref: userId,
+      post_ref: postId,
       created_at: new Date(),
       updated_at: new Date(),
     };
 
-    const createdBookmarks = await db.create("bookmarks", bookmarksData);
+    const createdBookmarks = await db.create(
+      tableNames.bookmark,
+      bookmarksData
+    );
 
     return NextResponse.json(createdBookmarks, {
       status: 201,
     });
   } catch (error: unknown) {
+    if (error instanceof ZodError) {
+      return handleZodError(error);
+    }
     const err = error as Error;
     return NextResponse.json(
       { error: "Failed to create bookmarks", details: err.message },

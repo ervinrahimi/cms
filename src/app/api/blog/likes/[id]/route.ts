@@ -1,72 +1,84 @@
-import { NextResponse } from 'next/server'
-import sdb from '@/db/surrealdb' // Import SurrealDB connection
-import { RecordId } from 'surrealdb'
+import { NextResponse } from "next/server";
+import sdb from "@/db/surrealdb";
+import { RecordId } from "surrealdb";
+import { checkExists } from "@/utils/api/checkExists";
+import tableNames from "@/utils/api/tableNames";
+
 /*
+
   Route: "api/blog/likes/[id]" [ PUT - GET - DELETE ]
  
- GET: API handler for fetching a specific like from the "likes" table in SurrealDB.
- PUT: API handler for updating a specific like in the "likes" table in SurrealDB.
- DELETE: API handler for deleting a specific like from the "likes" table in SurrealDB.
+  GET: API handler for fetching a specific like from the "likes" table in SurrealDB.
+  DELETE: API handler for deleting a specific like from the "likes" table in SurrealDB.
+
  */
 
-// GET /api/blog/[id]
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
   try {
-    const db = await sdb()
-    const { id } = await params
-    CheckPostExists(id)
+    const db = await sdb();
+    const { id } = await params;
 
-    const like = await db.select(new RecordId('likes', id))
+    // Check if the ID is valid
+    const likeCheck = await checkExists(
+      tableNames.like,
+      id,
+      `like with ID ${id} not found.`
+    );
+    if (likeCheck !== true) {
+      return likeCheck;
+    }
 
-    return NextResponse.json(like, { status: 200 })
+    const like = await db.select(new RecordId(tableNames.like, id));
+
+    return NextResponse.json(like, { status: 200 });
   } catch (error: unknown) {
     return NextResponse.json(
-      { error: 'Failed to fetch likes', details: (error as Error).message },
+      { error: "Failed to fetch likes", details: (error as Error).message },
       {
         status: 500,
       }
-    )
+    );
   }
 }
-// DELETE /api/blog/like/[id]
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
-  try {
-    const db = await sdb()
-    const { id } = await params
 
-    CheckPostExists(id)
+export async function DELETE(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const db = await sdb();
+    const { id } = await params;
+
+    // Check if the ID is valid
+    const likeCheck = await checkExists(
+      tableNames.like,
+      id,
+      `like with ID ${id} not found.`
+    );
+    if (likeCheck !== true) {
+      return likeCheck;
+    }
 
     // Delete the like
-    await db.delete(new RecordId('likes', id))
+    await db.delete(new RecordId(tableNames.like, id));
 
-    return NextResponse.json({ message: 'like deleted successfully.' }, { status: 200 })
+    return NextResponse.json(
+      { message: "like deleted successfully." },
+      { status: 200 }
+    );
   } catch (error: unknown) {
     return NextResponse.json(
       {
         error: {
-          code: 'internal_server_error',
-          message: 'Failed to delete like.',
+          code: "internal_server_error",
+          message: "Failed to delete like.",
           details: (error as Error).message,
         },
       },
       { status: 500 }
-    )
-  }
-}
-
-// Helper function to check if a post exists
-async function CheckPostExists(id: string) {
-  const db = await sdb()
-  const postExists = await db.select(new RecordId('likes', id))
-  if (!postExists || postExists.length === 0) {
-    return NextResponse.json(
-      {
-        error: {
-          code: 'not_found',
-          message: `likes with ID like:${id} does not exist.`,
-        },
-      },
-      { status: 404 }
-    )
+    );
   }
 }

@@ -1,125 +1,142 @@
-import { NextResponse } from 'next/server'
-import sdb from '@/db/surrealdb' // Import SurrealDB connection
-import { Patch, RecordId } from 'surrealdb'
-import { TagSchemaUpdate } from '@/schemas/zod/blog'
+import { NextResponse } from "next/server";
+import sdb from "@/db/surrealdb";
+import { Patch, RecordId } from "surrealdb";
+import { TagSchemaUpdate } from "@/schemas/zod/blog";
+import { checkExists } from "@/utils/api/checkExists";
+import { ZodError } from "zod";
+import { handleZodError } from "@/utils/api/zod/errorHandler.ts";
+import prepareUpdates from "@/utils/api/generateUpdates";
+import tableNames from "@/utils/api/tableNames";
+
 /*
+
   Route: "api/blog/tags/[id]" [ PUT - GET - DELETE ]
  
- GET: API handler for fetching a specific tag from the "tags" table in SurrealDB.
- PUT: API handler for updating a specific tag in the "tags" table in SurrealDB.
- DELETE: API handler for deleting a specific tag from the "tags" table in SurrealDB.
+  GET: API handler for fetching a specific tag from the "tags" table in SurrealDB.
+  PUT: API handler for updating a specific tag in the "tags" table in SurrealDB.
+  DELETE: API handler for deleting a specific tag from the "tags" table in SurrealDB.
+
  */
 
-// GET /api/blog/tag/[id]
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
   try {
-    const db = await sdb()
-    const { id } = await params
-    CheckPostExists(id)
+    const db = await sdb();
+    const { id } = await params;
 
-    const tag = await db.select(new RecordId('tags', id))
+    // Check if the ID is valid
+    const tagCheck = await checkExists(
+      tableNames.tag,
+      id,
+      `tag with ID ${id} not found.`
+    );
+    if (tagCheck !== true) {
+      return tagCheck;
+    }
 
-    return NextResponse.json(tag, { status: 200 })
+    const tag = await db.select(new RecordId(tableNames.tag, id));
+
+    return NextResponse.json(tag, { status: 200 });
   } catch (error: unknown) {
     return NextResponse.json(
-      { error: 'Failed to fetch tag', details: (error as Error).message },
+      { error: "Failed to fetch tag", details: (error as Error).message },
       {
         status: 500,
       }
-    )
+    );
   }
 }
 
-// PUT /api/blog/tag/[id]
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
   try {
-    const db = await sdb()
-    const body = await req.json()
-    const { id } = await params
+    const db = await sdb();
+    const body = await req.json();
+    const { id } = await params;
+
     // Check if the ID is valid
-    if (!id || typeof id !== 'string') {
-      console.error('Invalid ID:', id)
-      throw new Error('Invalid ID')
+    const tagCheck = await checkExists(
+      tableNames.tag,
+      id,
+      `tag with ID ${id} not found.`
+    );
+    if (tagCheck !== true) {
+      return tagCheck;
     }
-    CheckPostExists(id)
 
-    const { name, slug } = body
-    const validatedBody = TagSchemaUpdate.parse({ name, slug })
-    const updates: Patch[] = []
-    if (name)
-      updates.push({
-        op: 'replace',
-        path: '/name',
-        value: validatedBody.name,
-      })
-    if (slug)
-      updates.push({
-        op: 'replace',
-        path: '/slug',
-        value: validatedBody.slug,
-      })
-    updates.push({
-      op: 'replace',
-      path: '/updated_at',
-      value: new Date(),
-    })
+    const validatedBody = TagSchemaUpdate.parse(body);
+    const { name, slug } = validatedBody;
 
-    const recordId = new RecordId('tags', id)
+    const updates: Patch[] = [];
+    const fields = [
+      { path: "/name", value: name },
+      { path: "/slug", value: slug },
+    ];
+
+    prepareUpdates(fields, updates);
+
+    const recordId = new RecordId(tableNames.tag, id);
 
     // Apply the patch
-    const updatedTag = await db.patch(recordId, updates)
+    const updatedTag = await db.patch(recordId, updates);
 
     return NextResponse.json(updatedTag, {
       status: 200,
-    })
+    });
   } catch (error: unknown) {
+    if (error instanceof ZodError) {
+      return handleZodError(error);
+    }
+
+    const err = error as Error;
     return NextResponse.json(
-      { error: 'Failed to update tag', details: (error as Error).message },
+      { error: "Failed to update tag", details: err.message },
       {
         status: 500,
       }
-    )
+    );
   }
 }
-// DELETE /api/blog/tags/[id]
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
-  try {
-    const db = await sdb()
-    const { id } = await params
 
-    CheckPostExists(id)
+export async function DELETE(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const db = await sdb();
+    const { id } = await params;
+
+    // Check if the ID is valid
+    const tagCheck = await checkExists(
+      tableNames.tag,
+      id,
+      `tag with ID ${id} not found.`
+    );
+    if (tagCheck !== true) {
+      return tagCheck;
+    }
 
     // Delete the tag
-    await db.delete(new RecordId('tags', id))
+    await db.delete(new RecordId(tableNames.tag, id));
 
-    return NextResponse.json({ message: 'tags deleted successfully.' }, { status: 200 })
+    return NextResponse.json(
+      { message: "tags deleted successfully." },
+      { status: 200 }
+    );
   } catch (error: unknown) {
     return NextResponse.json(
       {
         error: {
-          code: 'internal_server_error',
-          message: 'Failed to delete tags.',
+          code: "internal_server_error",
+          message: "Failed to delete tags.",
           details: (error as Error).message,
         },
       },
       { status: 500 }
-    )
-  }
-}
-
-// Helper function to check if a post exists
-async function CheckPostExists(id: string) {
-  const db = await sdb()
-  const postExists = await db.select(new RecordId('tags', id))
-  if (!postExists || postExists.length === 0) {
-    return NextResponse.json(
-      {
-        error: {
-          code: 'not_found',
-          message: `tags with ID tag:${id} does not exist.`,
-        },
-      },
-      { status: 404 }
-    )
+    );
   }
 }

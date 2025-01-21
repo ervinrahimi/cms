@@ -1,23 +1,24 @@
 import { NextResponse } from "next/server";
 import { RecordId } from "surrealdb";
-
-import sdb from "@/db/surrealdb"; // Import SurrealDB connection
-
+import sdb from "@/db/surrealdb";
 import { PostSchemaCreate } from "@/schemas/zod/blog";
+import { ZodError } from "zod";
+import { handleZodError } from "@/utils/api/zod/errorHandler.ts";
+import tableNames from "@/utils/api/tableNames";
 
 /*
+
   Route: "api/blog" [ POST - GET ]
  
- GET: API handler for fetching all posts from the "posts" table in SurrealDB.
- POST: API handler for creating a new post in the "posts" table in SurrealDB.
+  GET: API handler for fetching all posts from the "posts" table in SurrealDB.
+  POST: API handler for creating a new post in the "posts" table in SurrealDB.
  
  */
 
-// GET /api/blog
 export async function GET() {
   try {
     const db = await sdb();
-    const posts = await db.select("posts");
+    const posts = await db.select(tableNames.post);
 
     return NextResponse.json(posts, {
       status: 200,
@@ -31,41 +32,34 @@ export async function GET() {
     );
   }
 }
-// POST /api/blog
+
 export async function POST(req: Request) {
   try {
     const db = await sdb();
     const body = await req.json();
-
+    const validatedBody = PostSchemaCreate.parse(body);
     const { title, content, slug, author, categories, tags, likes, comments } =
-      body;
-
-    if (!title || !content || !slug || !author) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        {
-          status: 400,
-        }
-      );
-    }
+      validatedBody;
 
     // Convert author, categories, tags, likes, and comments to RecordId objects
-    const authorId = new RecordId("users", author);
+    const authorId = new RecordId(tableNames.user, author);
     const categoryIds = categories.map(
-      (cat: string) => new RecordId("categories", cat)
+      (cat: string) => new RecordId(tableNames.category, cat)
     );
-    const tagIds = tags.map((tag: string) => new RecordId("tags", tag));
-    const likeIds = likes.map((lik: string) => new RecordId("likes", lik));
-    const commentIds = comments.map(
-      (com: string) => new RecordId("comments", com)
+    const tagIds = tags.map((tag: string) => new RecordId(tableNames.tag, tag));
+    const likeIds = likes?.map(
+      (lik: string) => new RecordId(tableNames.like, lik)
+    );
+    const commentIds = comments?.map(
+      (com: string) => new RecordId(tableNames.comment, com)
     );
 
     // Create a record for the post
-    const validatedBody = PostSchemaCreate.parse({ title, content, slug });
+
     const postData = {
-      title: validatedBody.title,
-      content: validatedBody.content,
-      slug: validatedBody.slug,
+      title,
+      content,
+      slug,
       author: authorId,
       categories: categoryIds,
       tags: tagIds,
@@ -75,15 +69,19 @@ export async function POST(req: Request) {
       updated_at: new Date(),
     };
 
-    const createdPost = await db.create("posts", postData);
+    const createdPost = await db.create(tableNames.post, postData);
 
     return NextResponse.json(createdPost, {
       status: 201,
     });
   } catch (error: unknown) {
+    if (error instanceof ZodError) {
+      return handleZodError(error);
+    }
+
     const err = error as Error;
     return NextResponse.json(
-      { error: "Failed to create post", details: err.message },
+      { error: "Failed to create posts", details: err.message },
       {
         status: 500,
       }
