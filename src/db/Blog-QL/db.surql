@@ -4,9 +4,13 @@ DEFINE TABLE User SCHEMAFULL
         FOR select, create, update, delete
         FULL; 
 // Create id field on User table with assertation string datatype
-DEFINE FIELD id ON User TYPE string ASSERT $value != NONE;
+DEFINE FIELD id ON User 
+    TYPE string 
+    ASSERT $value != NONE;
 // Create clerk_id field on User table with assertation string datatype
-DEFINE FIELD clerk_id ON User TYPE string ASSERT $value != NONE;
+DEFINE FIELD clerk_id ON User 
+    TYPE string 
+    ASSERT $value != NONE;
 // Create created_at field on User table with assertation datetime datatype
 DEFINE FIELD created_at ON User 
     TYPE datetime;
@@ -15,9 +19,11 @@ DEFINE FIELD updated_at ON User
     TYPE datetime 
     VALUE time::now();
 // Define index id field for unique record
-DEFINE INDEX idx_User_id ON User FIELDS id UNIQUE;
+DEFINE INDEX idx_User_id ON User 
+    FIELDS id UNIQUE;
 // Define index clerk_id field for unique record
-DEFINE INDEX idx_User_clerk_id ON User FIELDS clerk_id UNIQUE;
+DEFINE INDEX idx_User_clerk_id ON User 
+    FIELDS clerk_id UNIQUE;
 
 // ----------------------------------------------------------------------------------------
 
@@ -27,7 +33,9 @@ DEFINE TABLE BlogCategory SCHEMAFULL
         FOR select, create, update, delete
         FULL;
 // Create id field on BlogCategory table with assertation string datatype
-DEFINE FIELD id ON BlogCategory TYPE string ASSERT $value != NONE;
+DEFINE FIELD id ON BlogCategory 
+    TYPE string 
+    ASSERT $value != NONE;
 // Create title field on BlogCategory table with assertation string datatype
 DEFINE FIELD title ON BlogCategory 
     TYPE string 
@@ -48,9 +56,11 @@ DEFINE FIELD updated_at ON BlogCategory
     TYPE datetime 
     VALUE time::now();
 // Define index id field for unique record
-DEFINE INDEX idx_BlogCategory_id ON BlogCategory FIELDS id UNIQUE;
+DEFINE INDEX idx_BlogCategory_id ON BlogCategory 
+    FIELDS id UNIQUE;
 // Define index slug field for unique record
-DEFINE INDEX idx_BlogCategory_slug ON BlogCategory FIELDS slug UNIQUE;
+DEFINE INDEX idx_BlogCategory_slug ON BlogCategory 
+    FIELDS slug UNIQUE;
 
 // ----------------------------------------------------------------------------------------
 
@@ -60,7 +70,9 @@ DEFINE TABLE BlogTag SCHEMAFULL
         FOR select, create, update, delete
         FULL;
 // Create id field on BlogTag table with assertation string datatype
-DEFINE FIELD id ON BlogTag TYPE string ASSERT $value != NONE;
+DEFINE FIELD id ON BlogTag 
+    TYPE string 
+    ASSERT $value != NONE;
 // Create slug field on BlogTag table with assertation string datatype
 DEFINE FIELD slug ON BlogTag
     TYPE string 
@@ -77,9 +89,11 @@ DEFINE FIELD updated_at ON BlogTag
     TYPE datetime
     VALUE time::now();
 // Define index id field for unique record
-DEFINE INDEX idx_BlogTag_id ON BlogTag FIELDS id UNIQUE;
+DEFINE INDEX idx_BlogTag_id ON BlogTag 
+    FIELDS id UNIQUE;
 // Define index slug field for unique record
-DEFINE INDEX idx_BlogTag_slug ON BlogTag FIELDS slug UNIQUE;
+DEFINE INDEX idx_BlogTag_slug ON BlogTag 
+    FIELDS slug UNIQUE;
 
 // ----------------------------------------------------------------------------------------
 
@@ -89,7 +103,9 @@ DEFINE TABLE BlogPost SCHEMAFULL
         FOR select, create, update, delete
         FULL;
 // Create id field on BlogPost table with assertation string datatype
-DEFINE FIELD id ON BlogPost TYPE string ASSERT $value != NONE;
+DEFINE FIELD id ON BlogPost 
+    TYPE string 
+    ASSERT $value != NONE;
 // Create title field on BlogPost table with assertation string datatype
 DEFINE FIELD title ON BlogPost 
     TYPE string 
@@ -126,9 +142,11 @@ DEFINE FIELD updated_at ON BlogPost
     TYPE datetime 
     VALUE time::now();
 // Define index id field for unique record
-DEFINE INDEX idx_BlogPost_id ON BlogPost FIELDS id UNIQUE;
+DEFINE INDEX idx_BlogPost_id ON BlogPost 
+    FIELDS id UNIQUE;
 // Define index slug field for unique record
-DEFINE INDEX idx_BlogPost_slug ON BlogPost FIELDS slug UNIQUE;
+DEFINE INDEX idx_BlogPost_slug ON BlogPost 
+    FIELDS slug UNIQUE;
 
 // ----------------------------------------------------------------------------------------
 
@@ -138,7 +156,9 @@ DEFINE TABLE BlogComment SCHEMAFULL
         FOR select, create, update, delete
         FULL;
 // Create id field on BlogComment table with assertation string datatype
-DEFINE FIELD id On BlogComment TYPE string ASSERT $value != NONE;
+DEFINE FIELD id ON BlogComment 
+    TYPE string 
+    ASSERT $value != NONE;
 // Create post_ref field on BlogComment table with assertation and have relation with BlogPost table
 DEFINE FIELD post_ref ON BlogComment
     TYPE record<BlogPost>
@@ -159,7 +179,8 @@ DEFINE FIELD updated_at ON BlogComment
     TYPE datetime
     VALUE time::now();
 // Define index id field for unique record
-DEFINE INDEX idx_BlogComment_id ON BlogComment FIELDS id UNIQUE;
+DEFINE INDEX idx_BlogComment_id ON BlogComment 
+    FIELDS id UNIQUE;
 
 // ----------------------------------------------------------------------------------------
 
@@ -169,7 +190,9 @@ DEFINE TABLE BlogLike SCHEMAFULL
         FOR select, create, update, delete
         FULL;
 // Create id field on BlogLike table with assertation string datatype
-DEFINE FIELD id ON BlogLike TYPE string ASSERT $value != NONE;
+DEFINE FIELD id ON BlogLike 
+    TYPE string 
+    ASSERT $value != NONE;
 // Create post_ref field on BlogLike table with assertation and have relation with BlogPost table
 DEFINE FIELD post_ref ON BlogLike
     TYPE record<BlogPost>
@@ -182,7 +205,8 @@ DEFINE FIELD user_ref ON BlogLike
 DEFINE FIELD created_at ON BlogLike
     TYPE datetime;
 // Define index id field for unique record
-DEFINE INDEX idx_likes_id ON BlogLike FIELDS id UNIQUE;
+DEFINE INDEX idx_likes_id ON BlogLike 
+    FIELDS id UNIQUE;
 
 // ----------------------------------------------------------------------------------------
 
@@ -192,7 +216,9 @@ DEFINE TABLE BlogBookmark SCHEMAFULL
         FOR select, create, update, delete
         FULL;
 // Create id field on BlogBookmark table with assertation string datatype
-DEFINE FIELD id ON BlogBookmark TYPE string ASSERT $value != NONE;
+DEFINE FIELD id ON BlogBookmark 
+    TYPE string 
+    ASSERT $value != NONE;
 // Create user_ref field on BlogBookmark table with assertation and have relation with User table
 DEFINE FIELD user_ref ON BlogBookmark
     TYPE record<User>
@@ -205,4 +231,5 @@ DEFINE FIELD post_ref ON BlogBookmark
 DEFINE FIELD created_at ON BlogBookmark
     TYPE datetime;
 // Define index id field for unique record
-DEFINE INDEX idx_BlogBookmark_id ON BlogBookmark FIELDS id UNIQUE;
+DEFINE INDEX idx_BlogBookmark_id ON BlogBookmark 
+    FIELDS id UNIQUE;
