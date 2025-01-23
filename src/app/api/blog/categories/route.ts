@@ -20,11 +20,15 @@ export async function GET(request: Request) {
     const orderBy = url.searchParams.get('orderBy') || 'created_at'; // Default field for sorting
     const orderDirection = url.searchParams.get('orderDirection') || 'DESC'; // Default sorting direction
 
+    // Validate orderBy to prevent SQL injection
+    const validOrderByFields = ['created_at', 'title'];
+    const safeOrderBy = validOrderByFields.includes(orderBy) ? orderBy : 'created_at';
+
     const limit = 2; // Fixed value for record limit
     const offset = 0; // Fixed value for starting point
 
     const db = await sdb();
-    const query = `SELECT * FROM ${tableNames.category} ORDER BY ${orderBy} ${orderDirection} LIMIT ${limit} START ${offset}`;
+    const query = `SELECT * FROM ${tableNames.post} ORDER BY ${safeOrderBy} ${orderDirection} LIMIT ${limit} START ${offset}`;
 
     const result = await db.query(query);
     return NextResponse.json(result, { status: 200 });
