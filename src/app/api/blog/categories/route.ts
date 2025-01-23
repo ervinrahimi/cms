@@ -17,8 +17,14 @@ import { ZodError } from 'zod';
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
-    const orderBy = url.searchParams.get('orderBy') || 'created_at'; // Default field for sorting
-    const orderDirection = url.searchParams.get('orderDirection') || 'DESC'; // Default sorting direction
+    const searchParams = url.searchParams;
+
+    // Extract query parameters for search
+    const title = searchParams.get('title');
+
+    // Extract query parameters for sorting
+    const orderBy = searchParams.get('orderBy') || 'created_at'; // Default field for sorting
+    const orderDirection = searchParams.get('orderDirection') || 'DESC'; // Default sorting direction
 
     // Validate orderBy to prevent SQL injection
     const validOrderByFields = ['created_at', 'title'];
@@ -28,9 +34,24 @@ export async function GET(request: Request) {
     const offset = 0; // Fixed value for starting point
 
     const db = await sdb();
-    const query = `SELECT * FROM ${tableNames.post} ORDER BY ${safeOrderBy} ${orderDirection} LIMIT ${limit} START ${offset}`;
 
+    // Build the base query
+    let query = `SELECT * FROM ${tableNames.post}`;
+
+    // Add condition for title search if provided
+    if (title) {
+      query += ` WHERE title CONTAINS '${title}'`;
+    }
+
+    // Add ORDER BY clause for sorting
+    query += ` ORDER BY ${safeOrderBy} ${orderDirection}`;
+
+    // Add LIMIT and OFFSET
+    query += ` LIMIT ${limit} START ${offset}`;
+
+    // Execute the query
     const result = await db.query(query);
+
     return NextResponse.json(result, { status: 200 });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
