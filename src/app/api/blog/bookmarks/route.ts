@@ -1,32 +1,39 @@
-import sdb from "@/db/surrealdb";
-import { bookmarksSchemaCreate } from "@/schemas/zod/blog";
-import tableNames from "@/utils/api/tableNames";
-import { handleZodError } from "@/utils/api/zod/errorHandler.ts";
-import { NextResponse } from "next/server";
-import { RecordId } from "surrealdb";
-import { ZodError } from "zod";
+import sdb from '@/db/surrealdb';
+import { bookmarksSchemaCreate } from '@/schemas/zod/blog';
+import tableNames from '@/utils/api/tableNames';
+import { handleZodError } from '@/utils/api/zod/errorHandler.ts';
+import { NextResponse } from 'next/server';
+import { RecordId } from 'surrealdb';
+import { ZodError } from 'zod';
 
 /*
+
   Route: "api/blog/bookmarks" [ POST - GET ]
  
   GET: API handler for fetching all bookmarks from the "bookmarks" table in SurrealDB.
   POST: API handler for creating a new post in the "bookmarks" table in SurrealDB.
- */
 
-export async function GET() {
+*/
+
+export async function GET(request: Request) {
   try {
-    const db = await sdb();
-    const bookmarks = await db.select(tableNames.bookmark);
+    const url = new URL(request.url);
+    const orderBy = url.searchParams.get('orderBy') || 'created_at'; // Default field for sorting
+    const orderDirection = url.searchParams.get('orderDirection') || 'DESC'; // Default sorting direction
 
-    return NextResponse.json(bookmarks, {
-      status: 200,
-    });
-  } catch {
+    const limit = 2; // Fixed value for record limit
+    const offset = 0; // Fixed value for starting point
+
+    const db = await sdb();
+    const query = `SELECT * FROM ${tableNames.bookmark} ORDER BY ${orderBy} ${orderDirection} LIMIT ${limit} START ${offset}`;
+
+    const result = await db.query(query);
+    return NextResponse.json(result, { status: 200 });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: "Failed to fetch bookmarks" },
-      {
-        status: 500,
-      }
+      { message: 'An error occurred', error: errorMessage },
+      { status: 500 }
     );
   }
 }
@@ -49,10 +56,7 @@ export async function POST(req: Request) {
       updated_at: new Date(),
     };
 
-    const createdBookmarks = await db.create(
-      tableNames.bookmark,
-      bookmarksData
-    );
+    const createdBookmarks = await db.create(tableNames.bookmark, bookmarksData);
 
     return NextResponse.json(createdBookmarks, {
       status: 201,
@@ -63,7 +67,7 @@ export async function POST(req: Request) {
     }
     const err = error as Error;
     return NextResponse.json(
-      { error: "Failed to create bookmarks", details: err.message },
+      { error: 'Failed to create bookmarks', details: err.message },
       {
         status: 500,
       }

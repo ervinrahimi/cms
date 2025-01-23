@@ -1,21 +1,20 @@
-import { NextResponse } from "next/server";
-import sdb from "@/db/surrealdb";
-import { RecordId } from "surrealdb";
-import { checkExists } from "@/utils/api/checkExists";
-import tableNames from "@/utils/api/tableNames";
+import { NextResponse } from 'next/server';
+import sdb from '@/db/surrealdb';
+import { RecordId } from 'surrealdb';
+import { checkExists } from '@/utils/api/checkExists';
+import tableNames from '@/utils/api/tableNames';
 
 /*
+
   Route: "api/blog/bookmarks/[id]" [ PUT - GET - DELETE ]
  
   GET: API handler for fetching a specific bookmark from the "bookmarks" table in SurrealDB.
   PUT: API handler for updating a specific bookmark in the "bookmarks" table in SurrealDB.
   DELETE: API handler for deleting a specific bookmark from the "bookmarks" table in SurrealDB.
- */
 
-export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+*/
+
+export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
     const db = await sdb();
     const { id } = await params;
@@ -35,7 +34,7 @@ export async function GET(
     return NextResponse.json(bookmark, { status: 200 });
   } catch (error: unknown) {
     return NextResponse.json(
-      { error: "Failed to fetch bookmarks", details: (error as Error).message },
+      { error: 'Failed to fetch bookmarks', details: (error as Error).message },
       {
         status: 500,
       }
@@ -43,10 +42,7 @@ export async function GET(
   }
 }
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(req: Request, { params }: { params: { id: string } }) {
   try {
     const db = await sdb();
     const { id } = await params;
@@ -63,16 +59,13 @@ export async function DELETE(
     // Delete the bookmark
     await db.delete(new RecordId(tableNames.bookmark, id));
 
-    return NextResponse.json(
-      { message: "bookmarks deleted successfully." },
-      { status: 200 }
-    );
+    return NextResponse.json({ message: 'bookmarks deleted successfully.' }, { status: 200 });
   } catch (error: unknown) {
     return NextResponse.json(
       {
         error: {
-          code: "internal_server_error",
-          message: "Failed to delete bookmark.",
+          code: 'internal_server_error',
+          message: 'Failed to delete bookmark.',
           details: (error as Error).message,
         },
       },

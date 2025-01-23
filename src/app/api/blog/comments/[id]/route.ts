@@ -1,25 +1,24 @@
-import sdb from "@/db/surrealdb";
-import { CommentSchemaUpdate } from "@/schemas/zod/blog";
-import { checkExists } from "@/utils/api/checkExists";
-import prepareUpdates from "@/utils/api/generateUpdates";
-import tableNames from "@/utils/api/tableNames";
-import { handleZodError } from "@/utils/api/zod/errorHandler.ts";
-import { NextResponse } from "next/server";
-import { Patch, RecordId } from "surrealdb";
-import { ZodError } from "zod";
+import sdb from '@/db/surrealdb';
+import { CommentSchemaUpdate } from '@/schemas/zod/blog';
+import { checkExists } from '@/utils/api/checkExists';
+import prepareUpdates from '@/utils/api/generateUpdates';
+import tableNames from '@/utils/api/tableNames';
+import { handleZodError } from '@/utils/api/zod/errorHandler.ts';
+import { NextResponse } from 'next/server';
+import { Patch, RecordId } from 'surrealdb';
+import { ZodError } from 'zod';
 
 /*
+
   Route: "api/blog/[id]" [ PUT - GET - DELETE ]
  
   GET: API handler for fetching a specific comment from the "comments" table in SurrealDB.
   PUT: API handler for updating a specific comment in the "comments" table in SurrealDB.
   DELETE: API handler for deleting a specific comment from the "comments" table in SurrealDB.
- */
 
-export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+*/
+
+export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
     const db = await sdb();
     const { id } = await params;
@@ -39,7 +38,7 @@ export async function GET(
     return NextResponse.json(comment, { status: 200 });
   } catch (error: unknown) {
     return NextResponse.json(
-      { error: "Failed to fetch comment", details: (error as Error).message },
+      { error: 'Failed to fetch comment', details: (error as Error).message },
       {
         status: 500,
       }
@@ -47,21 +46,14 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(req: Request, { params }: { params: { id: string } }) {
   try {
     const db = await sdb();
     const body = await req.json();
     const { id } = await params;
 
     // Check if the ID is valid
-    const commentCheck = await checkExists(
-      "comments",
-      id,
-      `comment with ID ${id} not found.`
-    );
+    const commentCheck = await checkExists('comments', id, `comment with ID ${id} not found.`);
     if (commentCheck !== true) {
       return commentCheck;
     }
@@ -72,13 +64,13 @@ export async function PUT(
     const updates: Patch[] = [];
 
     const fields = [
-      { path: "/content", value: content },
+      { path: '/content', value: content },
       {
-        path: "/post_ref",
+        path: '/post_ref',
         value: post_ref ? new RecordId(tableNames.post, post_ref) : undefined,
       },
       {
-        path: "/user_ref",
+        path: '/user_ref',
         value: user_ref ? new RecordId(tableNames.user, user_ref) : undefined,
       },
     ];
@@ -100,7 +92,7 @@ export async function PUT(
 
     const err = error as Error;
     return NextResponse.json(
-      { error: "Failed to update comment", details: err.message },
+      { error: 'Failed to update comment', details: err.message },
       {
         status: 500,
       }
@@ -108,10 +100,7 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(req: Request, { params }: { params: { id: string } }) {
   try {
     const db = await sdb();
     const { id } = await params;
@@ -129,16 +118,13 @@ export async function DELETE(
     // Delete the comment
     await db.delete(new RecordId(tableNames.comment, id));
 
-    return NextResponse.json(
-      { message: "Comments deleted successfully." },
-      { status: 200 }
-    );
+    return NextResponse.json({ message: 'Comments deleted successfully.' }, { status: 200 });
   } catch (error: unknown) {
     return NextResponse.json(
       {
         error: {
-          code: "internal_server_error",
-          message: "Failed to delete comment.",
+          code: 'internal_server_error',
+          message: 'Failed to delete comment.',
           details: (error as Error).message,
         },
       },

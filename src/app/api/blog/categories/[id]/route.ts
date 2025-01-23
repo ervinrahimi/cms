@@ -1,25 +1,24 @@
-import sdb from "@/db/surrealdb";
-import { CategorySchemaUpdate } from "@/schemas/zod/blog";
-import { checkExists } from "@/utils/api/checkExists";
-import prepareUpdates from "@/utils/api/generateUpdates";
-import tableNames from "@/utils/api/tableNames";
-import { handleZodError } from "@/utils/api/zod/errorHandler.ts";
-import { NextResponse } from "next/server";
-import { Patch, RecordId } from "surrealdb";
-import { ZodError } from "zod";
+import sdb from '@/db/surrealdb';
+import { CategorySchemaUpdate } from '@/schemas/zod/blog';
+import { checkExists } from '@/utils/api/checkExists';
+import prepareUpdates from '@/utils/api/generateUpdates';
+import tableNames from '@/utils/api/tableNames';
+import { handleZodError } from '@/utils/api/zod/errorHandler.ts';
+import { NextResponse } from 'next/server';
+import { Patch, RecordId } from 'surrealdb';
+import { ZodError } from 'zod';
 
 /*
+
   Route: "api/blog/categories/[id]" [ PUT - GET - DELETE ]
  
   GET: API handler for fetching a specific category from the "categories" table in SurrealDB.
   PUT: API handler for updating a specific category in the "categories" table in SurrealDB.
   DELETE: API handler for deleting a specific category from the "categories" table in SurrealDB.
- */
 
-export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+*/
+
+export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
     const db = await sdb();
     const { id } = await params;
@@ -38,7 +37,7 @@ export async function GET(
     return NextResponse.json(category, { status: 200 });
   } catch (error: unknown) {
     return NextResponse.json(
-      { error: "Failed to fetch category", details: (error as Error).message },
+      { error: 'Failed to fetch category', details: (error as Error).message },
       {
         status: 500,
       }
@@ -46,10 +45,7 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(req: Request, { params }: { params: { id: string } }) {
   try {
     const db = await sdb();
     const body = await req.json();
@@ -69,9 +65,9 @@ export async function PUT(
 
     const updates: Patch[] = [];
     const fields = [
-      { path: "/title", value: title },
-      { path: "/description", value: description },
-      { path: "/slug", value: slug },
+      { path: '/title', value: title },
+      { path: '/description', value: description },
+      { path: '/slug', value: slug },
     ];
 
     prepareUpdates(fields, updates);
@@ -90,7 +86,7 @@ export async function PUT(
     }
     const err = error as Error;
     return NextResponse.json(
-      { error: "Failed to update category", details: err.message },
+      { error: 'Failed to update category', details: err.message },
       {
         status: 500,
       }
@@ -98,10 +94,7 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(req: Request, { params }: { params: { id: string } }) {
   try {
     const db = await sdb();
     const { id } = await params;
@@ -118,16 +111,13 @@ export async function DELETE(
     // Delete the category
     await db.delete(new RecordId(tableNames.category, id));
 
-    return NextResponse.json(
-      { message: "categories deleted successfully." },
-      { status: 200 }
-    );
+    return NextResponse.json({ message: 'categories deleted successfully.' }, { status: 200 });
   } catch (error: unknown) {
     return NextResponse.json(
       {
         error: {
-          code: "internal_server_error",
-          message: "Failed to delete category.",
+          code: 'internal_server_error',
+          message: 'Failed to delete category.',
           details: (error as Error).message,
         },
       },
