@@ -5,15 +5,15 @@ export default function prepareUpdates(
   fields.forEach(({ path, value }) => {
     if (value !== undefined) {
       updates.push({
-        op: "replace",
+        op: 'replace',
         path,
         value,
       });
     }
   });
   updates.push({
-    op: "replace",
-    path: "/updated_at",
+    op: 'replace',
+    path: '/updated_at',
     value: new Date(),
   });
 }
