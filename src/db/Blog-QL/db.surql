@@ -37,7 +37,8 @@ DEFINE FIELD id ON BlogCategory
     TYPE string 
     ASSERT $value != NONE;
 // Define parent_id field to establish parent-child relationship
-DEFINE FIELD parent_id ON TABLE BlogCategory TYPE record<BlogCategory>;
+DEFINE FIELD parent_id ON BlogCategory 
+    TYPE record<BlogCategory>;
 // Create title field on BlogCategory table with assertion string datatype
 DEFINE FIELD title ON BlogCategory 
     TYPE string 
@@ -253,7 +254,7 @@ DEFINE FIELD post_ref ON BlogMedia
     ASSERT $value != NONE;
 // Create media_url field on BlogMedia table with assertion string datatype
 DEFINE FIELD media_url ON BlogMedia
-    TYPE string
+    TYPE array<string>
     ASSERT $value != NONE;
 // Create media_type field on BlogMedia table with assertion string datatype
 DEFINE FIELD media_type ON BlogMedia
