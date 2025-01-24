@@ -1,5 +1,6 @@
 import sdb from '@/db/surrealdb';
-import { CommentSchemaCreate } from '@/schemas/zod/blog';
+import { CategorySchemaCreate } from '@/schemas/zod/blog';
+import { checkExists } from '@/utils/api/checkExists';
 import buildQuery from '@/utils/api/queryBuilder';
 import tableNames from '@/utils/api/tableNames';
 import { handleZodError } from '@/utils/api/zod/errorHandler.ts';
@@ -9,10 +10,10 @@ import { ZodError } from 'zod';
 
 /*
 
-  Route: "api/blog/comments" [ POST - GET ]
+  Route: "api/blog/categories" [ POST - GET ]
  
- GET: API handler for fetching all comments from the "comments" table in SurrealDB.
- POST: API handler for creating a new comment in the "comments" table in SurrealDB.
+  GET: API handler for fetching all categories from the "categories" table in SurrealDB.
+  POST: API handler for creating a new category in the "categories" table in SurrealDB.
 
 */
 
@@ -22,7 +23,7 @@ export async function GET(request: Request) {
     const searchParams = url.searchParams;
     const db = await sdb();
 
-    const query = buildQuery(searchParams, tableNames.comment, ['created_at']);
+    const query = buildQuery(searchParams, tableNames.category, ['created_at', 'title']);
     const result = await db.query(query);
 
     return NextResponse.json(result, { status: 200 });
@@ -39,30 +40,39 @@ export async function POST(req: NextRequest) {
   try {
     const db = await sdb();
     const body = await req.json();
-    const validatedBody = CommentSchemaCreate.parse(body);
-    const { post_ref, user_ref, content } = validatedBody;
-    // Convert post_ref and user_ref to RecordId objects
-    const postId = new RecordId(tableNames.post, post_ref);
-    const userId = new RecordId(tableNames.user, user_ref);
-    const commentData = {
-      post_ref: postId,
-      user_ref: userId,
-      content: content,
+    const validatedBody = CategorySchemaCreate.parse(body);
+    const { title, description, slug, parent_id } = validatedBody;
+
+    if (parent_id) {
+      const postCheck = await checkExists(
+        tableNames.category,
+        parent_id,
+        `Post with ID ${parent_id} not found.`
+      );
+      if (postCheck !== true) {
+        return postCheck;
+      }
+    }
+
+    const categoriesData = {
+      parent_id: parent_id ? new RecordId(tableNames.category, parent_id) : undefined,
+      title: title,
+      description: description,
+      slug: slug,
       created_at: new Date(),
       updated_at: new Date(),
     };
 
-    const createdComment = await db.create(tableNames.comment, commentData);
+    const createdCategory = await db.create(tableNames.category, categoriesData);
 
-    return NextResponse.json(createdComment, { status: 201 });
+    return NextResponse.json(createdCategory, { status: 201 });
   } catch (error: unknown) {
     if (error instanceof ZodError) {
       return handleZodError(error);
     }
-
     const err = error as Error;
     return NextResponse.json(
-      { error: 'Failed to create comment', details: err.message },
+      { error: 'Failed to create category', details: err.message },
       {
         status: 500,
       }

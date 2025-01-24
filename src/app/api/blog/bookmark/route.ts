@@ -1,5 +1,6 @@
 import sdb from '@/db/surrealdb';
-import { likesSchemaCreate } from '@/schemas/zod/blog';
+import { bookmarksSchemaCreate } from '@/schemas/zod/blog';
+import { checkExists } from '@/utils/api/checkExists';
 import buildQuery from '@/utils/api/queryBuilder';
 import tableNames from '@/utils/api/tableNames';
 import { handleZodError } from '@/utils/api/zod/errorHandler.ts';
@@ -9,10 +10,10 @@ import { ZodError } from 'zod';
 
 /*
 
-  Route: "api/blog/likes" [ POST - GET ]
+  Route: "api/blog/bookmarks" [ POST - GET ]
  
-  GET: API handler for fetching all likes from the "likes" table in SurrealDB.
-  POST: API handler for creating a new like in the "likes" table in SurrealDB.
+  GET: API handler for fetching all bookmarks from the "bookmarks" table in SurrealDB.
+  POST: API handler for creating a new post in the "bookmarks" table in SurrealDB.
 
 */
 
@@ -22,7 +23,7 @@ export async function GET(request: Request) {
     const searchParams = url.searchParams;
     const db = await sdb();
 
-    const query = buildQuery(searchParams, tableNames.like, ['created_at']);
+    const query = buildQuery(searchParams, tableNames.bookmark, ['created_at']);
     const result = await db.query(query);
 
     return NextResponse.json(result, { status: 200 });
@@ -39,33 +40,50 @@ export async function POST(req: Request) {
   try {
     const db = await sdb();
     const body = await req.json();
-    const validatedBody = likesSchemaCreate.parse(body);
+    const validatedBody = bookmarksSchemaCreate.parse(body);
     const { user_ref, post_ref } = validatedBody;
 
-    // Convert user_ref, post_ref to RecordId objects
+    const postCheck = await checkExists(
+      tableNames.post,
+      post_ref,
+      `Post with ID ${post_ref} not found.`
+    );
+    if (postCheck !== true) {
+      return postCheck;
+    }
+
+    const userCheck = await checkExists(
+      tableNames.user,
+      user_ref,
+      `user with ID ${user_ref} not found.`
+    );
+    if (userCheck !== true) {
+      return userCheck;
+    }
+
+    // Convert user_ref, post_ref and comments to RecordId objects
     const userId = new RecordId(tableNames.user, user_ref);
     const postId = new RecordId(tableNames.post, post_ref);
 
-    const likeData = {
+    const bookmarksData = {
       user_ref: userId,
       post_ref: postId,
       created_at: new Date(),
       updated_at: new Date(),
     };
 
-    const createdLike = await db.create(tableNames.like, likeData);
+    const createdBookmarks = await db.create(tableNames.bookmark, bookmarksData);
 
-    return NextResponse.json(createdLike, {
+    return NextResponse.json(createdBookmarks, {
       status: 201,
     });
   } catch (error: unknown) {
     if (error instanceof ZodError) {
       return handleZodError(error);
     }
-
     const err = error as Error;
     return NextResponse.json(
-      { error: 'Failed to create like', details: err.message },
+      { error: 'Failed to create bookmarks', details: err.message },
       {
         status: 500,
       }

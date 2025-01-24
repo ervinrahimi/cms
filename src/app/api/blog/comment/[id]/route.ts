@@ -53,13 +53,39 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     const { id } = await params;
 
     // Check if the ID is valid
-    const commentCheck = await checkExists('comments', id, `comment with ID ${id} not found.`);
+    const commentCheck = await checkExists(
+      tableNames.comment,
+      id,
+      `comment with ID ${id} not found.`
+    );
     if (commentCheck !== true) {
       return commentCheck;
     }
 
     const validatedBody = CommentSchemaUpdate.parse(body);
     const { post_ref, content, user_ref } = validatedBody;
+
+    if (post_ref) {
+      const postCheck = await checkExists(
+        tableNames.post,
+        post_ref,
+        `Post with ID ${post_ref} not found.`
+      );
+      if (postCheck !== true) {
+        return postCheck;
+      }
+    }
+
+    if (user_ref) {
+      const userCheck = await checkExists(
+        tableNames.user,
+        user_ref,
+        `user with ID ${user_ref} not found.`
+      );
+      if (userCheck !== true) {
+        return userCheck;
+      }
+    }
 
     const updates: Patch[] = [];
 

@@ -63,6 +63,17 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     const validatedBody = CategorySchemaUpdate.parse(body);
     const { title, description, slug, parent_id } = validatedBody;
 
+    if (parent_id) {
+      const postCheck = await checkExists(
+        tableNames.category,
+        parent_id,
+        `category with ID ${parent_id} not found.`
+      );
+      if (postCheck !== true) {
+        return postCheck;
+      }
+    }
+
     const updates: Patch[] = [];
     const fields = [
       { path: '/title', value: title },
