@@ -1,20 +1,20 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 const errorText = {
-  author: "Author cannot be empty",
-  title: "Title must be at least 3 characters long",
-  content: "Content must be at least 10 characters long",
-  slug: "Slug must be at least 3 characters long",
-  description: "Description must be at least 3 characters long",
-  name: "Name must be at least 3 characters long",
-  post_ref: "post ref cannot be empty",
-  user_ref: "user ref cannot be empty",
+  author: 'Author cannot be empty',
+  title: 'Title must be at least 3 characters long',
+  content: 'Content must be at least 10 characters long',
+  slug: 'Slug must be at least 3 characters long',
+  description: 'Description must be at least 3 characters long',
+  name: 'Name must be at least 3 characters long',
+  post_ref: 'post ref cannot be empty',
+  user_ref: 'user ref cannot be empty',
 };
 
 export const PostSchemaCreate = z.object({
   author: z.string().nonempty(errorText.author),
   categories: z.array(z.string()).nonempty(),
-  tags: z.array(z.string()).nonempty(),
+  tags: z.array(z.string()).optional(),
   likes: z.array(z.string()).optional(),
   comments: z.array(z.string()).optional(),
   title: z.string().min(3, errorText.title).nonempty(),
@@ -75,4 +75,16 @@ export const bookmarksSchemaCreate = z.object({
 export const likesSchemaCreate = z.object({
   post_ref: z.string().nonempty(errorText.post_ref),
   user_ref: z.string().nonempty(errorText.user_ref),
+});
+
+export const BlogMediaSchemaCreate = z.object({
+  post_ref: z.string().nonempty(errorText.post_ref),
+  media_url: z.array(z.string()).nonempty(),
+  media_type: z.array(z.string()).nonempty(),
+});
+
+export const BlogMediaSchemaUpdate = z.object({
+  post_ref: z.string().optional(),
+  media_url: z.array(z.string()).optional(),
+  media_type: z.array(z.string()).optional(),
 });

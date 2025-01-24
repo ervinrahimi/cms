@@ -1,5 +1,6 @@
 import sdb from '@/db/surrealdb';
 import { CategorySchemaCreate } from '@/schemas/zod/blog';
+import buildQuery from '@/utils/api/queryBuilder';
 import tableNames from '@/utils/api/tableNames';
 import { handleZodError } from '@/utils/api/zod/errorHandler.ts';
 import { NextRequest, NextResponse } from 'next/server';
@@ -17,20 +18,12 @@ import { ZodError } from 'zod';
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
-    const orderBy = url.searchParams.get('orderBy') || 'created_at'; // Default field for sorting
-    const orderDirection = url.searchParams.get('orderDirection') || 'DESC'; // Default sorting direction
-
-    // Validate orderBy to prevent SQL injection
-    const validOrderByFields = ['created_at', 'title'];
-    const safeOrderBy = validOrderByFields.includes(orderBy) ? orderBy : 'created_at';
-
-    const limit = 2; // Fixed value for record limit
-    const offset = 0; // Fixed value for starting point
-
+    const searchParams = url.searchParams;
     const db = await sdb();
-    const query = `SELECT * FROM ${tableNames.post} ORDER BY ${safeOrderBy} ${orderDirection} LIMIT ${limit} START ${offset}`;
 
+    const query = buildQuery(searchParams, tableNames.category, ['created_at', 'title'], 2, 0);
     const result = await db.query(query);
+
     return NextResponse.json(result, { status: 200 });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
