@@ -1,5 +1,6 @@
 import sdb from '@/db/surrealdb';
 import { TagSchemaCreate } from '@/schemas/zod/blog';
+import buildQuery from '@/utils/api/queryBuilder';
 import tableNames from '@/utils/api/tableNames';
 import { handleZodError } from '@/utils/api/zod/errorHandler.ts';
 import { NextRequest, NextResponse } from 'next/server';
@@ -18,34 +19,8 @@ export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
     const searchParams = url.searchParams;
-
-    // Extract query parameters for search
-    const name = searchParams.get('name');
-
-    // Extract query parameters for sorting
-    const orderBy = searchParams.get('orderBy') || 'created_at'; // Default field for sorting
-    const orderDirection = searchParams.get('orderDirection') || 'DESC'; // Default sorting direction
-
-    const limit = 2; // Fixed value for record limit
-    const offset = 0; // Fixed value for starting point
-
     const db = await sdb();
-
-    // Build the base query
-    let query = `SELECT * FROM ${tableNames.tag}`;
-
-    // Add condition for name search if provided
-    if (name) {
-      query += ` WHERE name CONTAINS '${name}'`;
-    }
-
-    // Add ORDER BY clause for sorting
-    query += ` ORDER BY ${orderBy} ${orderDirection}`;
-
-    // Add LIMIT and OFFSET
-    query += ` LIMIT ${limit} START ${offset}`;
-
-    // Execute the query
+    const query = buildQuery(searchParams, tableNames.tag, ['created_at', 'name'], 2, 0);
     const result = await db.query(query);
 
     return NextResponse.json(result, { status: 200 });

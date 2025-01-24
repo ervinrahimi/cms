@@ -1,5 +1,6 @@
 import sdb from '@/db/surrealdb';
 import { PostSchemaCreate } from '@/schemas/zod/blog';
+import buildQuery from '@/utils/api/queryBuilder';
 import tableNames from '@/utils/api/tableNames';
 import { handleZodError } from '@/utils/api/zod/errorHandler.ts';
 import { NextResponse } from 'next/server';
@@ -15,52 +16,11 @@ import { ZodError } from 'zod';
 
 export async function GET(req: Request) {
   try {
-    const db = await sdb();
     const url = new URL(req.url);
     const searchParams = url.searchParams;
+    const db = await sdb();
 
-    // Extract query parameters for search
-    const title = searchParams.get('title');
-    const author = searchParams.get('author');
-    const category = searchParams.get('category');
-
-    // Extract query parameters for sorting
-    const orderBy = searchParams.get('orderBy') || 'created_at'; // Default field for sorting
-    const orderDirection = searchParams.get('orderDirection') || 'DESC'; // Default sorting direction
-
-    // Validate orderBy to prevent SQL injection
-    const validOrderByFields = ['created_at', 'title', 'slug'];
-    const safeOrderBy = validOrderByFields.includes(orderBy) ? orderBy : 'created_at';
-
-    // Build the query
-    let query = `SELECT * FROM ${tableNames.post}`;
-    const conditions: string[] = [];
-
-    // Add conditions to the query dynamically based on query parameters
-    if (title) {
-      conditions.push(`title CONTAINS '${title}'`);
-    }
-    if (author) {
-      conditions.push(`author = '${author}'`);
-    }
-    if (category) {
-      conditions.push(`categories CONTAINS '${category}'`);
-    }
-
-    // Append WHERE clause if any conditions exist
-    if (conditions.length > 0) {
-      query += ` WHERE ${conditions.join(' AND ')}`;
-    }
-
-    // Add ORDER BY clause for sorting
-    query += ` ORDER BY ${safeOrderBy} ${orderDirection}`;
-
-    // Add LIMIT and OFFSET (optional, if needed)
-    const limit = 2; // Fixed value for record limit
-    const offset = 0; // Fixed value for starting point
-    query += ` LIMIT ${limit} START ${offset}`;
-
-    // Execute the query
+    const query = buildQuery(searchParams, tableNames.post, ['created_at', 'title', 'slug'], 2, 0);
     const posts = await db.query(query);
 
     return NextResponse.json(posts, {

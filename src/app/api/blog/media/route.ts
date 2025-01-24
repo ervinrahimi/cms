@@ -1,5 +1,6 @@
 import sdb from '@/db/surrealdb';
 import { BlogMediaSchemaCreate } from '@/schemas/zod/blog';
+import buildQuery from '@/utils/api/queryBuilder';
 import tableNames from '@/utils/api/tableNames';
 import { handleZodError } from '@/utils/api/zod/errorHandler.ts';
 import { NextResponse } from 'next/server';
@@ -15,48 +16,11 @@ import { ZodError } from 'zod';
 
 export async function GET(req: Request) {
   try {
-    const db = await sdb();
     const url = new URL(req.url);
     const searchParams = url.searchParams;
+    const db = await sdb();
 
-    // Extract query parameters for search
-    const postRef = searchParams.get('post_ref');
-    const mediaType = searchParams.get('media_type');
-
-    // Extract query parameters for sorting
-    const orderBy = searchParams.get('orderBy') || 'created_at'; // Default field for sorting
-    const orderDirection = searchParams.get('orderDirection') || 'DESC'; // Default sorting direction
-
-    // Validate orderBy to prevent SQL injection
-    const validOrderByFields = ['created_at', 'media_type'];
-    const safeOrderBy = validOrderByFields.includes(orderBy) ? orderBy : 'created_at';
-
-    // Build the query
-    let query = `SELECT * FROM ${tableNames.media}`;
-    const conditions: string[] = [];
-
-    // Add conditions to the query dynamically based on query parameters
-    if (postRef) {
-      conditions.push(`post_ref = '${postRef}'`);
-    }
-    if (mediaType) {
-      conditions.push(`media_type = '${mediaType}'`);
-    }
-
-    // Append WHERE clause if any conditions exist
-    if (conditions.length > 0) {
-      query += ` WHERE ${conditions.join(' AND ')}`;
-    }
-
-    // Add ORDER BY clause for sorting
-    query += ` ORDER BY ${safeOrderBy} ${orderDirection}`;
-
-    // Add LIMIT and OFFSET (optional, if needed)
-    const limit = 10; // Fixed value for record limit
-    const offset = 0; // Fixed value for starting point
-    query += ` LIMIT ${limit} START ${offset}`;
-
-    // Execute the query
+    const query = buildQuery(searchParams, tableNames.media, ['created_at', 'media_type'], 10, 0);
     const mediaRecords = await db.query(query);
 
     return NextResponse.json(mediaRecords, {
