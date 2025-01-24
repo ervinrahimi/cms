@@ -38,7 +38,8 @@ DEFINE FIELD id ON BlogCategory
     ASSERT $value != NONE;
 // Define parent_id field to establish parent-child relationship
 DEFINE FIELD parent_id ON BlogCategory 
-    TYPE record<BlogCategory>;
+    TYPE option<record<BlogCategory>>
+    ASSERT $value == NONE;
 // Create title field on BlogCategory table with assertion string datatype
 DEFINE FIELD title ON BlogCategory 
     TYPE string 

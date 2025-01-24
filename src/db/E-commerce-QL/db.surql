@@ -13,7 +13,8 @@ DEFINE FIELD name ON ShopCategory
     ASSERT $value != NONE;
 // Create parent_id field on ShopCategory table with relation to ShopCategory table
 DEFINE FIELD parent_id ON ShopCategory
-    TYPE record<ShopCategory>;
+    TYPE option<record<ShopCategory>>
+    ASSERT $value == NONE;
 // Create slug field on ShopCategory table with assertation string datatype
 DEFINE FIELD slug ON ShopCategory 
     TYPE string 
