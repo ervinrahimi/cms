@@ -3,27 +3,25 @@ export default function buildQuery(
   tableName: string,
   validOrderByFields: string[]
 ) {
-  let query = `SELECT * FROM ${tableName}`;
+  let dbQuery = `SELECT * FROM ${tableName}`;
   const conditions: string[] = [];
 
   // Extract search filters and add to conditions
-  const title = searchParams.get('title');
+  const query = searchParams.get('title');
   const author = searchParams.get('author');
   const category = searchParams.get('category');
   const postRef = searchParams.get('post_ref');
   const mediaType = searchParams.get('media_type');
-  const name = searchParams.get('name');
 
-  if (title) conditions.push(`title CONTAINS '${title}'`);
+  if (query) conditions.push(`title CONTAINS '${query}'`);
   if (author) conditions.push(`author = '${author}'`);
   if (category) conditions.push(`categories CONTAINS '${category}'`);
   if (postRef) conditions.push(`post_ref = '${postRef}'`);
   if (mediaType) conditions.push(`media_type = '${mediaType}'`);
-  if (name) conditions.push(`name CONTAINS '${name}'`);
 
   // Append WHERE clause if any conditions exist
   if (conditions.length > 0) {
-    query += ` WHERE ${conditions.join(' AND ')}`;
+    dbQuery += ` WHERE ${conditions.join(' AND ')}`;
   }
 
   // Extract orderBy and orderDirection
@@ -34,7 +32,7 @@ export default function buildQuery(
   const safeOrderBy = validOrderByFields.includes(orderBy) ? orderBy : 'created_at';
 
   // Add ORDER BY clause for sorting
-  query += ` ORDER BY ${safeOrderBy} ${orderDirection}`;
+  dbQuery += ` ORDER BY ${safeOrderBy} ${orderDirection}`;
 
   // Extract limit parameter for pagination
   let limitParam = parseInt(searchParams.get('limit') || '', 10);
@@ -51,7 +49,7 @@ export default function buildQuery(
   }
 
   // Add LIMIT and START clauses for pagination
-  query += ` LIMIT ${limitParam} START ${start}`;
+  dbQuery += ` LIMIT ${limitParam} START ${start}`;
 
-  return query;
+  return dbQuery;
 }
