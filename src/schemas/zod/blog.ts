@@ -34,12 +34,14 @@ export const PostSchemaUpdate = z.object({
 });
 
 export const CategorySchemaCreate = z.object({
+  parent_id: z.string().optional(),
   title: z.string().min(3, errorText.title).nonempty(),
   description: z.string().min(3, errorText.description).nonempty(),
   slug: z.string().min(3, errorText.slug).nonempty(),
 });
 
 export const CategorySchemaUpdate = z.object({
+  parent_id: z.string().optional(),
   title: z.string().min(3, errorText.title).optional(),
   description: z.string().min(3, errorText.description).optional(),
   slug: z.string().min(3, errorText.slug).optional(),

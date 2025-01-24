@@ -1,10 +1,7 @@
-// Helper function to build query and extract search params
 export default function buildQuery(
   searchParams: URLSearchParams,
   tableName: string,
-  validOrderByFields: string[],
-  limit: number = 2,
-  offset: number = 0
+  validOrderByFields: string[]
 ) {
   let query = `SELECT * FROM ${tableName}`;
   const conditions: string[] = [];
@@ -39,8 +36,22 @@ export default function buildQuery(
   // Add ORDER BY clause for sorting
   query += ` ORDER BY ${safeOrderBy} ${orderDirection}`;
 
-  // Add LIMIT and OFFSET
-  query += ` LIMIT ${limit} START ${offset}`;
+  // Extract limit parameter for pagination
+  let limitParam = parseInt(searchParams.get('limit') || '', 10);
+  if (isNaN(limitParam)) {
+    limitParam = 10;
+  }
+
+  limitParam = Math.max(1, Math.min(limitParam, 100));
+
+  // Extract start parameter for pagination
+  let start = parseInt(searchParams.get('start') || '', 10);
+  if (isNaN(start)) {
+    start = 0;
+  }
+
+  // Add LIMIT and START clauses for pagination
+  query += ` LIMIT ${limitParam} START ${start}`;
 
   return query;
 }

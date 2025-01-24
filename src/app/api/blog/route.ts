@@ -20,7 +20,7 @@ export async function GET(req: Request) {
     const searchParams = url.searchParams;
     const db = await sdb();
 
-    const query = buildQuery(searchParams, tableNames.post, ['created_at', 'title', 'slug'], 2, 0);
+    const query = buildQuery(searchParams, tableNames.post, ['created_at', 'title', 'slug']);
     const posts = await db.query(query);
 
     return NextResponse.json(posts, {

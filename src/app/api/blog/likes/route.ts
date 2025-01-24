@@ -22,7 +22,7 @@ export async function GET(request: Request) {
     const searchParams = url.searchParams;
     const db = await sdb();
 
-    const query = buildQuery(searchParams, tableNames.like, ['created_at'], 2, 0);
+    const query = buildQuery(searchParams, tableNames.like, ['created_at']);
     const result = await db.query(query);
 
     return NextResponse.json(result, { status: 200 });

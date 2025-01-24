@@ -61,13 +61,17 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     }
 
     const validatedBody = CategorySchemaUpdate.parse(body);
-    const { title, description, slug } = validatedBody;
+    const { title, description, slug, parent_id } = validatedBody;
 
     const updates: Patch[] = [];
     const fields = [
       { path: '/title', value: title },
       { path: '/description', value: description },
       { path: '/slug', value: slug },
+      {
+        path: '/parent_id',
+        value: parent_id ? new RecordId(tableNames.category, parent_id) : undefined,
+      },
     ];
 
     prepareUpdates(fields, updates);

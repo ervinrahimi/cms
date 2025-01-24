@@ -4,6 +4,7 @@ import buildQuery from '@/utils/api/queryBuilder';
 import tableNames from '@/utils/api/tableNames';
 import { handleZodError } from '@/utils/api/zod/errorHandler.ts';
 import { NextRequest, NextResponse } from 'next/server';
+import { RecordId } from 'surrealdb';
 import { ZodError } from 'zod';
 
 /*
@@ -21,7 +22,7 @@ export async function GET(request: Request) {
     const searchParams = url.searchParams;
     const db = await sdb();
 
-    const query = buildQuery(searchParams, tableNames.category, ['created_at', 'title'], 2, 0);
+    const query = buildQuery(searchParams, tableNames.category, ['created_at', 'title']);
     const result = await db.query(query);
 
     return NextResponse.json(result, { status: 200 });
@@ -39,9 +40,10 @@ export async function POST(req: NextRequest) {
     const db = await sdb();
     const body = await req.json();
     const validatedBody = CategorySchemaCreate.parse(body);
-    const { title, description, slug } = validatedBody;
+    const { title, description, slug, parent_id } = validatedBody;
 
     const categoriesData = {
+      parent_id: parent_id ? new RecordId(tableNames.category, parent_id) : undefined,
       title: title,
       description: description,
       slug: slug,

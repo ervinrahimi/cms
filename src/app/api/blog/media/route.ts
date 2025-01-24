@@ -20,7 +20,7 @@ export async function GET(req: Request) {
     const searchParams = url.searchParams;
     const db = await sdb();
 
-    const query = buildQuery(searchParams, tableNames.media, ['created_at', 'media_type'], 10, 0);
+    const query = buildQuery(searchParams, tableNames.media, ['created_at', 'media_type']);
     const mediaRecords = await db.query(query);
 
     return NextResponse.json(mediaRecords, {
