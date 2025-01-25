@@ -1,28 +1,32 @@
 export default function buildQuery(
   searchParams: URLSearchParams,
   tableName: string,
-  validOrderByFields: string[]
+  validOrderByFields: string[],
+  queryField?: 'title' | 'name'
 ): string {
+  // Initialize the query
   let query = `SELECT * FROM ${tableName}`;
+
+  // Array to hold conditions
   const conditions: string[] = [];
 
-  // Extract search filters and add to conditions
-  const filters: { key: string; column: string }[] = [
-    { key: 'title', column: 'title' },
+  // Supported filters (with dynamic queryField)
+  const filters = [
+    { key: 'query', column: queryField }, // Map "query" to either "title" or "name"
     { key: 'author', column: 'author' },
     { key: 'category', column: 'categories' },
     { key: 'post_ref', column: 'post_ref' },
     { key: 'media_type', column: 'media_type' },
-    { key: 'name', column: 'name' },
     { key: 'slug', column: 'slug' },
   ];
 
+  // Iterate through filters and add conditions
   filters.forEach((filter) => {
-    const value = searchParams.get(filter.key);
+    const value = searchParams.get(filter.key); // Get the value
     if (value) {
-      // Escape single quotes
-      const escapedValue = value.replace(/'/g, "\\'");
-      if (['title', 'category', 'name', 'slug'].includes(filter.key)) {
+      const decodedValue = decodeURIComponent(value.trim()); // Decode and trim
+      const escapedValue = decodedValue.replace(/'/g, "\\'"); // Escape single quotes
+      if (filter.key === 'query') {
         conditions.push(`${filter.column} CONTAINS '${escapedValue}'`);
       } else {
         conditions.push(`${filter.column} = '${escapedValue}'`);
@@ -30,36 +34,30 @@ export default function buildQuery(
     }
   });
 
-  // Append WHERE clause if any conditions exist
+  // Add WHERE clause if conditions exist
   if (conditions.length > 0) {
     query += ` WHERE ${conditions.join(' AND ')}`;
   }
 
-  // Extract orderBy and orderDirection
-  const orderBy = searchParams.get('orderBy') || 'created_at'; // Default field for sorting
+  // Handle orderBy and orderDirection
+  const orderBy = searchParams.get('orderBy') || 'created_at';
   const orderDirection =
-    searchParams.get('orderDirection')?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC'; // Default sorting direction
-
-  // Validate orderBy to prevent SQL injection
+    searchParams.get('orderDirection')?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
   const safeOrderBy = validOrderByFields.includes(orderBy) ? orderBy : 'created_at';
-
-  // Add ORDER BY clause for sorting
   query += ` ORDER BY ${safeOrderBy} ${orderDirection}`;
 
-  // Extract limit parameter for pagination
+  // Handle pagination
   let limitParam = parseInt(searchParams.get('limit') || '', 10);
   if (isNaN(limitParam) || limitParam <= 0) {
-    limitParam = 10; // Default value
+    limitParam = 10;
   }
-  limitParam = Math.min(limitParam, 100); // Max limit 100
+  limitParam = Math.min(limitParam, 100);
 
-  // Extract start parameter for pagination
   let start = parseInt(searchParams.get('start') || '', 10);
   if (isNaN(start) || start < 0) {
-    start = 0; // Default value
+    start = 0;
   }
 
-  // Add LIMIT and START clauses for pagination
   query += ` LIMIT ${limitParam} START ${start}`;
 
   return query;
