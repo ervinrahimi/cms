@@ -6,7 +6,6 @@ const tableNames = {
   like: 'BlogLike',
   comment: 'BlogComment',
   bookmark: 'BlogBookmark',
-  media: 'BlogMedia',
 };
 
 export default tableNames;

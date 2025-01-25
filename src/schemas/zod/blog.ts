@@ -78,15 +78,3 @@ export const likesSchemaCreate = z.object({
   post_ref: z.string().nonempty(errorText.post_ref),
   user_ref: z.string().nonempty(errorText.user_ref),
 });
-
-export const BlogMediaSchemaCreate = z.object({
-  post_ref: z.string().nonempty(errorText.post_ref),
-  media_url: z.array(z.string()).nonempty(),
-  media_type: z.array(z.string()).nonempty(),
-});
-
-export const BlogMediaSchemaUpdate = z.object({
-  post_ref: z.string().optional(),
-  media_url: z.array(z.string()).optional(),
-  media_type: z.array(z.string()).optional(),
-});
