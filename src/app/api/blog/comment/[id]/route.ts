@@ -63,7 +63,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     }
 
     const validatedBody = CommentSchemaUpdate.parse(body);
-    const { post_ref, content, user_ref } = validatedBody;
+    const { post_ref, content, user_ref, parent_id } = validatedBody;
 
     if (post_ref) {
       const postCheck = await checkExists(
@@ -87,6 +87,17 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       }
     }
 
+    if (parent_id) {
+      const commentCheck = await checkExists(
+        tableNames.comment,
+        parent_id,
+        `comment with ID ${parent_id} not found.`
+      );
+      if (commentCheck !== true) {
+        return commentCheck;
+      }
+    }
+
     const updates: Patch[] = [];
 
     const fields = [
@@ -98,6 +109,10 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       {
         path: '/user_ref',
         value: user_ref ? new RecordId(tableNames.user, user_ref) : undefined,
+      },
+      {
+        path: '/parent_comment_ref',
+        value: parent_id ? new RecordId(tableNames.category, parent_id) : undefined,
       },
     ];
 
@@ -140,9 +155,15 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     if (commentCheck !== true) {
       return commentCheck;
     }
+    const like = await db.select(new RecordId(tableNames.like, id));
 
-    // Delete the comment
+    const post_id = like.post_ref as RecordId;
+
     await db.delete(new RecordId(tableNames.comment, id));
+    await db.query(`UPDATE ${tableNames.post} SET comments -= $comment_id WHERE id = $post_id`, {
+      comment_id: new RecordId(tableNames.comment, id),
+      post_id: post_id,
+    });
 
     return NextResponse.json({ message: 'Comments deleted successfully.' }, { status: 200 });
   } catch (error: unknown) {

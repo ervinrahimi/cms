@@ -40,18 +40,25 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 export async function DELETE(req: Request, { params }: { params: { id: string } }) {
   try {
     const db = await sdb();
-    const { id } = await params;
+    const { id } = params;
 
-    // Check if the ID is valid
-    const likeCheck = await checkExists(tableNames.like, id, `like with ID ${id} not found.`);
+    const likeCheck = await checkExists(tableNames.like, id, `Like with ID ${id} not found.`);
     if (likeCheck !== true) {
       return likeCheck;
     }
 
-    // Delete the like
+    const like = await db.select(new RecordId(tableNames.like, id));
+
+    const post_id = like.post_ref as RecordId;
+
     await db.delete(new RecordId(tableNames.like, id));
 
-    return NextResponse.json({ message: 'like deleted successfully.' }, { status: 200 });
+    await db.query(`UPDATE ${tableNames.post} SET likes -= $like_id WHERE id = $post_id`, {
+      like_id: new RecordId(tableNames.like, id),
+      post_id: post_id,
+    });
+
+    return NextResponse.json({ message: 'Like deleted successfully.' }, { status: 200 });
   } catch (error: unknown) {
     return NextResponse.json(
       {

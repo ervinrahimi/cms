@@ -55,13 +55,12 @@ export async function POST(req: Request) {
     const userCheck = await checkExists(
       tableNames.user,
       user_ref,
-      `user with ID ${user_ref} not found.`
+      `User with ID ${user_ref} not found.`
     );
     if (userCheck !== true) {
       return userCheck;
     }
 
-    // Convert user_ref, post_ref to RecordId objects
     const userId = new RecordId(tableNames.user, user_ref);
     const postId = new RecordId(tableNames.post, post_ref);
 
@@ -73,7 +72,15 @@ export async function POST(req: Request) {
     };
 
     const createdLike = await db.create(tableNames.like, likeData);
-
+    if (createdLike?.length > 0) {
+      const likedId = createdLike[0]?.id.id;
+      if (likedId) {
+        await db.query(`UPDATE ${tableNames.post} SET likes += $like_id WHERE id = $post_id`, {
+          like_id: new RecordId(tableNames.like, likedId),
+          post_id: postId,
+        });
+      }
+    }
     return NextResponse.json(createdLike, {
       status: 201,
     });

@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     const db = await sdb();
     const body = await req.json();
     const validatedBody = CommentSchemaCreate.parse(body);
-    const { post_ref, user_ref, content } = validatedBody;
+    const { post_ref, user_ref, content, parent_id } = validatedBody;
 
     const postCheck = await checkExists(
       tableNames.post,
@@ -61,10 +61,22 @@ export async function POST(req: NextRequest) {
       return userCheck;
     }
 
+    if (parent_id) {
+      const postCheck = await checkExists(
+        tableNames.comment,
+        parent_id,
+        `Post with ID ${parent_id} not found.`
+      );
+      if (postCheck !== true) {
+        return postCheck;
+      }
+    }
+
     // Convert post_ref and user_ref to RecordId objects
     const postId = new RecordId(tableNames.post, post_ref);
     const userId = new RecordId(tableNames.user, user_ref);
     const commentData = {
+      parent_comment_ref: parent_id ? new RecordId(tableNames.category, parent_id) : undefined,
       post_ref: postId,
       user_ref: userId,
       content: content,
@@ -73,6 +85,19 @@ export async function POST(req: NextRequest) {
     };
 
     const createdComment = await db.create(tableNames.comment, commentData);
+
+    if (createdComment?.length > 0) {
+      const commentId = createdComment[0]?.id.id;
+      if (commentId) {
+        await db.query(
+          `UPDATE ${tableNames.post} SET comments += $comment_id WHERE id = $post_id`,
+          {
+            comment_id: new RecordId(tableNames.comment, commentId),
+            post_id: postId,
+          }
+        );
+      }
+    }
 
     return NextResponse.json(createdComment, { status: 201 });
   } catch (error: unknown) {

@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     const searchParams = url.searchParams;
     const db = await sdb();
 
-    const query = buildQuery(searchParams, tableNames.category, ['created_at', 'title']);
+    const query = buildQuery(searchParams, tableNames.category, ['created_at', 'title', 'slug']);
     const result = await db.query(query);
 
     return NextResponse.json(result, { status: 200 });
@@ -44,13 +44,13 @@ export async function POST(req: NextRequest) {
     const { title, description, slug, parent_id } = validatedBody;
 
     if (parent_id) {
-      const postCheck = await checkExists(
+      const categoryCheck = await checkExists(
         tableNames.category,
         parent_id,
-        `Post with ID ${parent_id} not found.`
+        `category with ID ${parent_id} not found.`
       );
-      if (postCheck !== true) {
-        return postCheck;
+      if (categoryCheck !== true) {
+        return categoryCheck;
       }
     }
 

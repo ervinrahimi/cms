@@ -58,12 +58,14 @@ export const TagSchemaUpdate = z.object({
 });
 
 export const CommentSchemaCreate = z.object({
+  parent_id: z.string().optional(),
   content: z.string().min(10, errorText.content).nonempty(),
   post_ref: z.string().nonempty(errorText.post_ref),
   user_ref: z.string().nonempty(errorText.user_ref),
 });
 
 export const CommentSchemaUpdate = z.object({
+  parent_id: z.string().optional(),
   content: z.string().min(10, errorText.content).optional(),
   post_ref: z.string().optional(),
   user_ref: z.string().optional(),
