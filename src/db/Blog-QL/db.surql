@@ -121,7 +121,11 @@ DEFINE FIELD content ON BlogPost
 // Create slug field on BlogPost table with assertion string datatype
 DEFINE FIELD slug ON BlogPost
     TYPE string 
-    ASSERT $value != NONE; 
+    ASSERT $value != NONE;
+// Create image field on BlogPost table with assertion string datatype
+DEFINE FIELD image ON BlogPost
+    TYPE string
+    ASSERT $value == NONE;
 // Create author field on BlogPost table with assertion and have relation with User table 
 DEFINE FIELD author ON BlogPost
     TYPE record<User>
@@ -171,6 +175,10 @@ DEFINE FIELD post_ref ON BlogComment
 DEFINE FIELD user_ref ON BlogComment
     TYPE record<User>
     ASSERT $value != NONE;
+// Create parent_comment_ref field on BlogComment table with optional relation to BlogComment table
+DEFINE FIELD parent_comment_ref ON BlogComment
+    TYPE option<record<BlogComment>>
+    ASSERT $value == NONE;
 // Create content field on BlogComment table with assertion string datatype
 DEFINE FIELD content ON BlogComment
     TYPE string
@@ -211,6 +219,12 @@ DEFINE FIELD created_at ON BlogLike
 // Define index id field for unique record
 DEFINE INDEX idx_likes_id ON BlogLike 
     FIELDS id UNIQUE;
+// Define index post_ref field for unique record
+DEFINE INDEX idx_BlogLike_user_ref ON BlogLike 
+    FIELDS user_ref UNIQUE;
+// Define index user_ref field for unique record
+DEFINE INDEX idx_BlogLike_post_ref ON BlogLike 
+    FIELDS post_ref UNIQUE;
 
 // ----------------------------------------------------------------------------------------
 
@@ -237,38 +251,9 @@ DEFINE FIELD created_at ON BlogBookmark
 // Define index id field for unique record
 DEFINE INDEX idx_BlogBookmark_id ON BlogBookmark 
     FIELDS id UNIQUE;
-
-// ----------------------------------------------------------------------------------------
-
-// Create a schemafull table BlogMedia with name "BlogMedia"
-DEFINE TABLE BlogMedia SCHEMAFULL
-    PERMISSIONS
-        FOR select, create, update, delete
-        WHERE id = $auth.id;
-// Create id field on BlogMedia table with assertion string datatype
-DEFINE FIELD id ON BlogMedia
-    TYPE string
-    ASSERT $value != NONE;
-// Create post_ref field on BlogMedia table with assertion and have relation with BlogPost table
-DEFINE FIELD post_ref ON BlogMedia
-    TYPE record<BlogPost>
-    ASSERT $value != NONE;
-// Create media_url field on BlogMedia table with assertion string datatype
-DEFINE FIELD media_url ON BlogMedia
-    TYPE array<string>
-    ASSERT $value != NONE;
-// Create media_type field on BlogMedia table with assertion string datatype
-DEFINE FIELD media_type ON BlogMedia
-    TYPE string
-    ASSERT $value IN ["image", "video"];
-// Create created_at field on BlogMedia table with datetime datatype
-DEFINE FIELD created_at ON BlogMedia
-    TYPE datetime
-    DEFAULT time::now();
-// Create updated_at field on BlogMedia table with datetime datatype
-DEFINE FIELD updated_at ON BlogMedia
-    TYPE datetime
-    VALUE time::now();
-// Define index id field for unique record
-DEFINE INDEX idx_BlogMedia_id ON BlogMedia
-    FIELDS id UNIQUE;
+// Define index user_ref field for unique record
+DEFINE INDEX idx_BlogBookmark_user_ref ON BlogBookmark 
+    FIELDS user_ref UNIQUE;
+// Define index post_ref field for unique record
+DEFINE INDEX idx_BlogBookmark_post_ref ON BlogBookmark 
+    FIELDS post_ref UNIQUE;
