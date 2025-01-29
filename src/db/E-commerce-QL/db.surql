@@ -1,3 +1,29 @@
+// Create a schemafull table User with name "User"
+DEFINE TABLE User SCHEMAFULL 
+    PERMISSIONS
+        FOR select, create, update, delete
+        WHERE id = $auth.id; 
+// Create id field on User table with assertion string datatype
+DEFINE FIELD id ON User 
+    TYPE string 
+    ASSERT $value != NONE;
+// Create clerk_id field on User table with assertion string datatype
+DEFINE FIELD clerk_id ON User 
+    TYPE string 
+    ASSERT $value != NONE;
+// Create created_at field on User table with assertion datetime datatype
+DEFINE FIELD created_at ON User 
+    TYPE datetime DEFAULT time::now();
+// Create updated_at field on User table with datetime datatype
+DEFINE FIELD updated_at ON User 
+    TYPE datetime 
+    VALUE time::now();
+// Define index id field for unique record
+DEFINE INDEX idx_User_id ON User 
+    FIELDS id UNIQUE;
+// Define index clerk_id field for unique record
+DEFINE INDEX idx_User_clerk_id ON User 
+    FIELDS clerk_id UNIQUE;
 // Create a schemafull table Shop Category with name "ShopCategory"
 DEFINE TABLE ShopCategory SCHEMAFULL 
     PERMISSIONS
