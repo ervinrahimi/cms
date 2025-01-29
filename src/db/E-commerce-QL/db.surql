@@ -113,7 +113,7 @@ DEFINE FIELD pricePerUnit ON ShopOrderDetails
 // Create totalPrice field on ShopOrderDetails table with assertation number datatype
 DEFINE FIELD totalPrice ON ShopOrderDetails 
     TYPE number 
-    ASSERT $value (this.quantity * this.pricePerUnit);
+    ASSERT $value != NONE;
 // Create created_at field on ShopOrderDetails table with datetime datatype
 DEFINE FIELD created_at ON ShopOrderDetails 
     TYPE datetime;
