@@ -13,8 +13,7 @@ DEFINE FIELD name ON ShopCategory
     ASSERT $value != NONE;
 // Create parent_id field on ShopCategory table with relation to ShopCategory table
 DEFINE FIELD parent_id ON ShopCategory
-    TYPE option<record<ShopCategory>>
-    ASSERT $value == NONE;
+    TYPE option<record<ShopCategory>>;
 // Create slug field on ShopCategory table with assertation string datatype
 DEFINE FIELD slug ON ShopCategory 
     TYPE string 
@@ -32,6 +31,12 @@ DEFINE INDEX idx_ShopCategory_id ON ShopCategory
 // Define index slug field for unique record
 DEFINE INDEX idx_ShopCategory_slug ON ShopCategory 
     FIELDS slug UNIQUE;
+// Define index parent_id field for unique record
+DEFINE INDEX idx_ShopCategory_parent_id ON ShopCategory 
+    FIELDS parent_id;
+// Define index name field for unique record
+DEFINE INDEX idx_ShopCategory_name ON ShopCategory 
+    FIELDS name UNIQUE;
 
 // -------------------------------------------------------------------------------------------
 
@@ -46,7 +51,7 @@ DEFINE FIELD id ON ShopOrder
     ASSERT $value != NONE;
 // Create user_id field on ShopOrder table with assertation and have relation with User table
 DEFINE FIELD user_id ON ShopOrder 
-    TYPE array<record<User>> 
+    TYPE record<User>
     ASSERT $value != NONE;
 // Create shipping_address_id field on ShopOrder table with assertation and have relation with ShopShippingAddress table
 DEFINE FIELD shipping_address_id ON ShopOrder 
@@ -74,6 +79,9 @@ DEFINE FIELD updated_at ON ShopOrder
 // Define index id field for unique record
 DEFINE INDEX idx_ShopOrder_id ON ShopOrder 
     FIELDS id UNIQUE;
+// Define index user_id field for unique record
+DEFINE INDEX idx_ShopOrder_user_id ON ShopOrder 
+    FIELDS user_id;
 
 // -------------------------------------------------------------------------------------------
 
@@ -88,11 +96,11 @@ DEFINE FIELD id ON ShopOrderDetails
     ASSERT $value != NONE;
 // Create order_id field on ShopOrderDetails table with assertation and have relation with ShopOrder table
 DEFINE FIELD order_id ON ShopOrderDetails 
-    TYPE array<record<ShopOrder>> 
+    TYPE record<ShopOrder>
     ASSERT $value != NONE;
 // Create product_id field on ShopOrderDetails table with assertation and have relation with ShopProduct table
 DEFINE FIELD product_id ON ShopOrderDetails 
-    TYPE array<record<ShopProduct>> 
+    TYPE array<record<ShopProduct>>
     ASSERT $value != NONE;
 // Create quantity field on ShopOrderDetails table with assertation number datatype
 DEFINE FIELD quantity ON ShopOrderDetails 
@@ -105,7 +113,7 @@ DEFINE FIELD pricePerUnit ON ShopOrderDetails
 // Create totalPrice field on ShopOrderDetails table with assertation number datatype
 DEFINE FIELD totalPrice ON ShopOrderDetails 
     TYPE number 
-    ASSERT $value != NONE;
+    ASSERT $value (this.quantity * this.pricePerUnit);
 // Create created_at field on ShopOrderDetails table with datetime datatype
 DEFINE FIELD created_at ON ShopOrderDetails 
     TYPE datetime;
@@ -116,6 +124,9 @@ DEFINE FIELD updated_at ON ShopOrderDetails
 // Define index id field for unique record
 DEFINE INDEX idx_ShopOrderDetails_id ON ShopOrderDetails 
     FIELDS id UNIQUE;
+// Define index order_id field for unique record
+DEFINE INDEX idx_ShopOrderDetails_order_id ON ShopOrderDetails 
+    FIELDS order_id;
 
 // ------------------------------------------------------------------------------------------
 
@@ -130,7 +141,7 @@ DEFINE FIELD id ON ShopPayment
     ASSERT $value != NONE;
 // Create order_id field on ShopPayment table with assertation and have relation with ShopOrder table
 DEFINE FIELD order_id ON ShopPayment 
-    TYPE array<record<ShopOrder>> 
+    TYPE record<ShopOrder>
     ASSERT $value != NONE;
 // Create product_id field on ShopPayment table with assertation and have relation with ShopProduct table
 DEFINE FIELD product_id ON ShopPayment 
@@ -203,9 +214,9 @@ DEFINE TABLE ShopProduct SCHEMAFULL
 DEFINE FIELD id ON ShopProduct 
     TYPE string 
     ASSERT $value != NONE;
-// Create user_id field on ShopProduct table with assertation and have relation with User table
-DEFINE FIELD user_id ON ShopProduct 
-    TYPE array<record<User>> 
+// Create slug field on ShopProduct table with assertation string datatype
+DEFINE FIELD slug ON ShopProduct 
+    TYPE string 
     ASSERT $value != NONE;
 // Create category_id field on ShopProduct table with assertation and have relation with ShopCategory table
 DEFINE FIELD category_id ON ShopProduct 
@@ -225,7 +236,7 @@ DEFINE FIELD price ON ShopProduct
     ASSERT $value != NONE;
 // Create stock field on ShopProduct table with assertation number datatype
 DEFINE FIELD stock ON ShopProduct 
-    TYPE number 
+    TYPE record<ShopInventory> 
     ASSERT $value != NONE;
 // Create created_at field on ShopProduct table with datetime datatype
 DEFINE FIELD created_at ON ShopProduct 
@@ -237,6 +248,15 @@ DEFINE FIELD updated_at ON ShopProduct
 // Define index id field for unique record
 DEFINE INDEX idx_ShopProduct_id ON ShopProduct 
     FIELDS id UNIQUE;
+// Define index slug field for unique record
+DEFINE INDEX idx_ShopProduct_slug ON ShopProduct 
+    FIELDS slug UNIQUE;
+// Define index name field for unique record
+DEFINE INDEX idx_ShopProduct_name ON ShopProduct 
+    FIELDS name UNIQUE;
+// Define index category_id field for unique record
+DEFINE INDEX idx_ShopProduct_category_id ON ShopProduct 
+    FIELDS category_id;
 
 // ------------------------------------------------------------------------------------------
 
@@ -257,16 +277,16 @@ DEFINE FIELD product_id ON ShopDiscount
 DEFINE FIELD name ON ShopDiscount 
     TYPE string 
     ASSERT $value != NONE;
-// Create discountCode field on ShopDiscount table with assertation number datatype
-DEFINE FIELD discountCode ON ShopDiscount 
+// Create usageLimit field on ShopDiscount table with assertation number datatype
+DEFINE FIELD usageLimit ON ShopDiscount 
     TYPE number 
+    ASSERT $value != NONE;
+// Create discountCode field on ShopDiscount table with assertation string datatype
+DEFINE FIELD discountCode ON ShopDiscount 
+    TYPE string 
     ASSERT $value != NONE;
 // Create discountPercentage field on ShopDiscount table with assertation number datatype
 DEFINE FIELD discountPercentage ON ShopDiscount 
-    TYPE number 
-    ASSERT $value != NONE;
-// Create stock field on ShopDiscount table with assertation number datatype
-DEFINE FIELD stock ON ShopDiscount 
     TYPE number 
     ASSERT $value != NONE;
 // Create startDate field on ShopDiscount table with assertation datetime datatype
@@ -305,7 +325,7 @@ DEFINE FIELD user_id ON ShopCart
     ASSERT $value != NONE;
 // Create items field on ShopCart table with assertation array datatype
 DEFINE FIELD items ON ShopCart 
-    TYPE array 
+    TYPE array<object>
     ASSERT $value != NONE;
 // Create created_at field on ShopCart table with datetime datatype
 DEFINE FIELD created_at ON ShopCart 
@@ -317,6 +337,9 @@ DEFINE FIELD updated_at ON ShopCart
 // Define index id field for unique record
 DEFINE INDEX idx_ShopCart_id ON ShopCart 
     FIELDS id UNIQUE;
+// Define index user_id field for unique record
+DEFINE INDEX idx_ShopCart_user_id ON ShopCart 
+    FIELDS user_id;
 
 // ------------------------------------------------------------------------------------------
 
@@ -403,3 +426,9 @@ DEFINE FIELD updated_at ON ShopShippingAddress
 // Define index id field for unique record
 DEFINE INDEX idx_ShopShippingAddress_id ON ShopShippingAddress 
     FIELDS id UNIQUE;
+// Define index user_id field for unique record
+DEFINE INDEX idx_ShopShippingAddress_user_id ON ShopShippingAddress 
+    FIELDS user_id;
+// Define index postal_code field for unique record
+DEFINE INDEX idx_ShopShippingAddress_postal_code ON ShopShippingAddress 
+    FIELDS postal_code;
