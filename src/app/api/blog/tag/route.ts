@@ -1,17 +1,17 @@
 import sdb from '@/db/surrealdb';
 import { TagSchemaCreate } from '@/schemas/zod/blog';
-import buildQuery from '@/utils/api/queryBuilder';
-import tableNames from '@/utils/api/tableNames';
+import buildQuery from '@/utils/api/blog/queryBuilder';
+import { blogTabels } from '@/utils/api/tableNames';
 import { handleZodError } from '@/utils/api/zod/errorHandler.ts';
 import { NextRequest, NextResponse } from 'next/server';
 import { ZodError } from 'zod';
 
 /*
 
-  Route: "api/blog/tags" [ POST - GET ]
+  Route: "api/blog/tag" [ POST - GET ]
  
-  GET: API handler for fetching all tags from the "tags" table in SurrealDB.
-  POST: API handler for creating a new tag in the "tags" table in SurrealDB.
+  GET: API handler for fetching all tags from the "BlogTag" table in SurrealDB.
+  POST: API handler for creating a new tag in the "BlogTag" table in SurrealDB.
 
 */
 
@@ -20,7 +20,7 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const searchParams = url.searchParams;
     const db = await sdb();
-    const query = buildQuery(searchParams, tableNames.tag, ['created_at', 'slug'], 'name');
+    const query = buildQuery(searchParams, blogTabels.tag, ['created_at', 'slug'], 'name');
     const result = await db.query(query);
 
     return NextResponse.json(result, { status: 200 });
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
       updated_at: new Date(),
     };
 
-    const createdTag = await db.create(tableNames.tag, tagsData);
+    const createdTag = await db.create(blogTabels.tag, tagsData);
 
     return NextResponse.json(createdTag, { status: 201 });
   } catch (error: unknown) {

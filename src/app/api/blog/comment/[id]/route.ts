@@ -2,7 +2,7 @@ import sdb from '@/db/surrealdb';
 import { CommentSchemaUpdate } from '@/schemas/zod/blog';
 import { checkExists } from '@/utils/api/checkExists';
 import prepareUpdates from '@/utils/api/generateUpdates';
-import tableNames from '@/utils/api/tableNames';
+import { blogTabels } from '@/utils/api/tableNames';
 import { handleZodError } from '@/utils/api/zod/errorHandler.ts';
 import { NextResponse } from 'next/server';
 import { Patch, RecordId } from 'surrealdb';
@@ -10,11 +10,11 @@ import { ZodError } from 'zod';
 
 /*
 
-  Route: "api/blog/[id]" [ PUT - GET - DELETE ]
+  Route: "api/comment/[id]" [ PUT - GET - DELETE ]
  
-  GET: API handler for fetching a specific comment from the "comments" table in SurrealDB.
-  PUT: API handler for updating a specific comment in the "comments" table in SurrealDB.
-  DELETE: API handler for deleting a specific comment from the "comments" table in SurrealDB.
+  GET: API handler for fetching a specific comment from the "BlogComment" table in SurrealDB.
+  PUT: API handler for updating a specific comment in the "BlogComment" table in SurrealDB.
+  DELETE: API handler for deleting a specific comment from the "BlogComment" table in SurrealDB.
 
 */
 
@@ -25,7 +25,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
     // Check if the ID is valid
     const commentCheck = await checkExists(
-      tableNames.comment,
+      blogTabels.comment,
       id,
       `comment with ID ${id} not found.`
     );
@@ -33,7 +33,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       return commentCheck;
     }
 
-    const comment = await db.select(new RecordId(tableNames.comment, id));
+    const comment = await db.select(new RecordId(blogTabels.comment, id));
 
     return NextResponse.json(comment, { status: 200 });
   } catch (error: unknown) {
@@ -54,7 +54,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 
     // Check if the ID is valid
     const commentCheck = await checkExists(
-      tableNames.comment,
+      blogTabels.comment,
       id,
       `comment with ID ${id} not found.`
     );
@@ -67,7 +67,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 
     if (post_ref) {
       const postCheck = await checkExists(
-        tableNames.post,
+        blogTabels.post,
         post_ref,
         `Post with ID ${post_ref} not found.`
       );
@@ -78,7 +78,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 
     if (user_ref) {
       const userCheck = await checkExists(
-        tableNames.user,
+        blogTabels.user,
         user_ref,
         `user with ID ${user_ref} not found.`
       );
@@ -89,7 +89,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 
     if (parent_id) {
       const commentCheck = await checkExists(
-        tableNames.comment,
+        blogTabels.comment,
         parent_id,
         `comment with ID ${parent_id} not found.`
       );
@@ -104,21 +104,21 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       { path: '/content', value: content },
       {
         path: '/post_ref',
-        value: post_ref ? new RecordId(tableNames.post, post_ref) : undefined,
+        value: post_ref ? new RecordId(blogTabels.post, post_ref) : undefined,
       },
       {
         path: '/user_ref',
-        value: user_ref ? new RecordId(tableNames.user, user_ref) : undefined,
+        value: user_ref ? new RecordId(blogTabels.user, user_ref) : undefined,
       },
       {
         path: '/parent_comment_ref',
-        value: parent_id ? new RecordId(tableNames.category, parent_id) : undefined,
+        value: parent_id ? new RecordId(blogTabels.category, parent_id) : undefined,
       },
     ];
 
     prepareUpdates(fields, updates);
 
-    const recordId = new RecordId(tableNames.comment, id);
+    const recordId = new RecordId(blogTabels.comment, id);
 
     // Apply the patch
     const updatedComment = await db.patch(recordId, updates);
@@ -148,20 +148,20 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
 
     // Check if the ID is valid
     const commentCheck = await checkExists(
-      tableNames.comment,
+      blogTabels.comment,
       id,
       `comment with ID ${id} not found.`
     );
     if (commentCheck !== true) {
       return commentCheck;
     }
-    const like = await db.select(new RecordId(tableNames.like, id));
+    const like = await db.select(new RecordId(blogTabels.like, id));
 
     const post_id = like.post_ref as RecordId;
 
-    await db.delete(new RecordId(tableNames.comment, id));
-    await db.query(`UPDATE ${tableNames.post} SET comments -= $comment_id WHERE id = $post_id`, {
-      comment_id: new RecordId(tableNames.comment, id),
+    await db.delete(new RecordId(blogTabels.comment, id));
+    await db.query(`UPDATE ${blogTabels.post} SET comments -= $comment_id WHERE id = $post_id`, {
+      comment_id: new RecordId(blogTabels.comment, id),
       post_id: post_id,
     });
 

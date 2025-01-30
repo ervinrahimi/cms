@@ -1,8 +1,8 @@
 import sdb from '@/db/surrealdb';
 import { likesSchemaCreate } from '@/schemas/zod/blog';
 import { checkExists } from '@/utils/api/checkExists';
-import buildQuery from '@/utils/api/queryBuilder';
-import tableNames from '@/utils/api/tableNames';
+import buildQuery from '@/utils/api/blog/queryBuilder';
+import { blogTabels } from '@/utils/api/tableNames';
 import { handleZodError } from '@/utils/api/zod/errorHandler.ts';
 import { NextResponse } from 'next/server';
 import { RecordId } from 'surrealdb';
@@ -10,10 +10,10 @@ import { ZodError } from 'zod';
 
 /*
 
-  Route: "api/blog/likes" [ POST - GET ]
+  Route: "api/blog/like" [ POST - GET ]
  
-  GET: API handler for fetching all likes from the "likes" table in SurrealDB.
-  POST: API handler for creating a new like in the "likes" table in SurrealDB.
+  GET: API handler for fetching all likes from the "BlogLike" table in SurrealDB.
+  POST: API handler for creating a new like in the "BlogLike" table in SurrealDB.
 
 */
 
@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     const searchParams = url.searchParams;
     const db = await sdb();
 
-    const query = buildQuery(searchParams, tableNames.like, ['created_at']);
+    const query = buildQuery(searchParams, blogTabels.like, ['created_at']);
     const result = await db.query(query);
 
     return NextResponse.json(result, { status: 200 });
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
     const { user_ref, post_ref } = validatedBody;
 
     const postCheck = await checkExists(
-      tableNames.post,
+      blogTabels.post,
       post_ref,
       `Post with ID ${post_ref} not found.`
     );
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
     }
 
     const userCheck = await checkExists(
-      tableNames.user,
+      blogTabels.user,
       user_ref,
       `User with ID ${user_ref} not found.`
     );
@@ -61,8 +61,8 @@ export async function POST(req: Request) {
       return userCheck;
     }
 
-    const userId = new RecordId(tableNames.user, user_ref);
-    const postId = new RecordId(tableNames.post, post_ref);
+    const userId = new RecordId(blogTabels.user, user_ref);
+    const postId = new RecordId(blogTabels.post, post_ref);
 
     const likeData = {
       user_ref: userId,
@@ -71,12 +71,12 @@ export async function POST(req: Request) {
       updated_at: new Date(),
     };
 
-    const createdLike = await db.create(tableNames.like, likeData);
+    const createdLike = await db.create(blogTabels.like, likeData);
     if (createdLike?.length > 0) {
       const likedId = createdLike[0]?.id.id;
       if (likedId) {
-        await db.query(`UPDATE ${tableNames.post} SET likes += $like_id WHERE id = $post_id`, {
-          like_id: new RecordId(tableNames.like, likedId),
+        await db.query(`UPDATE ${blogTabels.post} SET likes += $like_id WHERE id = $post_id`, {
+          like_id: new RecordId(blogTabels.like, likedId),
           post_id: postId,
         });
       }

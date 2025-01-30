@@ -2,7 +2,7 @@ import sdb from '@/db/surrealdb';
 import { CategorySchemaUpdate } from '@/schemas/zod/blog';
 import { checkExists } from '@/utils/api/checkExists';
 import prepareUpdates from '@/utils/api/generateUpdates';
-import tableNames from '@/utils/api/tableNames';
+import { blogTabels } from '@/utils/api/tableNames';
 import { handleZodError } from '@/utils/api/zod/errorHandler.ts';
 import { NextResponse } from 'next/server';
 import { Patch, RecordId } from 'surrealdb';
@@ -10,11 +10,11 @@ import { ZodError } from 'zod';
 
 /*
 
-  Route: "api/blog/categories/[id]" [ PUT - GET - DELETE ]
+  Route: "api/blog/category/[id]" [ PUT - GET - DELETE ]
  
-  GET: API handler for fetching a specific category from the "categories" table in SurrealDB.
-  PUT: API handler for updating a specific category in the "categories" table in SurrealDB.
-  DELETE: API handler for deleting a specific category from the "categories" table in SurrealDB.
+  GET: API handler for fetching a specific category from the "BlogCategory" table in SurrealDB.
+  PUT: API handler for updating a specific category in the "BlogCategory" table in SurrealDB.
+  DELETE: API handler for deleting a specific category from the "BlogCategory" table in SurrealDB.
 
 */
 
@@ -24,7 +24,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     const { id } = await params;
 
     const categoryCheck = await checkExists(
-      tableNames.category,
+      blogTabels.category,
       id,
       `category with ID ${id} not found.`
     );
@@ -32,7 +32,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       return categoryCheck;
     }
 
-    const category = await db.select(new RecordId(tableNames.category, id));
+    const category = await db.select(new RecordId(blogTabels.category, id));
 
     return NextResponse.json(category, { status: 200 });
   } catch (error: unknown) {
@@ -52,7 +52,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     const { id } = await params;
 
     const categoryCheck = await checkExists(
-      tableNames.category,
+      blogTabels.category,
       id,
       `category with ID ${id} not found.`
     );
@@ -65,7 +65,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 
     if (parent_id) {
       const categoryCheck = await checkExists(
-        tableNames.category,
+        blogTabels.category,
         parent_id,
         `category with ID ${parent_id} not found.`
       );
@@ -81,13 +81,13 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       { path: '/slug', value: slug },
       {
         path: '/parent_id',
-        value: parent_id ? new RecordId(tableNames.category, parent_id) : undefined,
+        value: parent_id ? new RecordId(blogTabels.category, parent_id) : undefined,
       },
     ];
 
     prepareUpdates(fields, updates);
 
-    const recordId = new RecordId(tableNames.category, id);
+    const recordId = new RecordId(blogTabels.category, id);
 
     // Apply the patch
     const updatedCategory = await db.patch(recordId, updates);
@@ -115,7 +115,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     const { id } = await params;
 
     const categoryCheck = await checkExists(
-      tableNames.category,
+      blogTabels.category,
       id,
       `category with ID ${id} not found.`
     );
@@ -124,7 +124,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     }
 
     // Delete the category
-    await db.delete(new RecordId(tableNames.category, id));
+    await db.delete(new RecordId(blogTabels.category, id));
 
     return NextResponse.json({ message: 'categories deleted successfully.' }, { status: 200 });
   } catch (error: unknown) {

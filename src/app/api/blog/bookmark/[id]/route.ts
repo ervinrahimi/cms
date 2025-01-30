@@ -2,15 +2,15 @@ import { NextResponse } from 'next/server';
 import sdb from '@/db/surrealdb';
 import { RecordId } from 'surrealdb';
 import { checkExists } from '@/utils/api/checkExists';
-import tableNames from '@/utils/api/tableNames';
+import { blogTabels } from '@/utils/api/tableNames';
 
 /*
 
-  Route: "api/blog/bookmarks/[id]" [ PUT - GET - DELETE ]
+  Route: "api/blog/bookmark/[id]" [ PUT - GET - DELETE ]
  
-  GET: API handler for fetching a specific bookmark from the "bookmarks" table in SurrealDB.
-  PUT: API handler for updating a specific bookmark in the "bookmarks" table in SurrealDB.
-  DELETE: API handler for deleting a specific bookmark from the "bookmarks" table in SurrealDB.
+  GET: API handler for fetching a specific bookmark from the "BlogBookmark" table in SurrealDB.
+  PUT: API handler for updating a specific bookmark in the "BlogBookmark" table in SurrealDB.
+  DELETE: API handler for deleting a specific bookmark from the "BlogBookmark" table in SurrealDB.
 
 */
 
@@ -21,7 +21,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
     // Check if the ID is valid
     const bookmarkCheck = await checkExists(
-      tableNames.bookmark,
+      blogTabels.bookmark,
       id,
       `bookmark with ID ${id} not found.`
     );
@@ -29,7 +29,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       return bookmarkCheck;
     }
 
-    const bookmark = await db.select(new RecordId(tableNames.bookmark, id));
+    const bookmark = await db.select(new RecordId(blogTabels.bookmark, id));
 
     return NextResponse.json(bookmark, { status: 200 });
   } catch (error: unknown) {
@@ -48,7 +48,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     const { id } = await params;
 
     const bookmarkCheck = await checkExists(
-      tableNames.bookmark,
+      blogTabels.bookmark,
       id,
       `bookmark with ID ${id} not found.`
     );
@@ -57,7 +57,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     }
 
     // Delete the bookmark
-    await db.delete(new RecordId(tableNames.bookmark, id));
+    await db.delete(new RecordId(blogTabels.bookmark, id));
 
     return NextResponse.json({ message: 'bookmarks deleted successfully.' }, { status: 200 });
   } catch (error: unknown) {

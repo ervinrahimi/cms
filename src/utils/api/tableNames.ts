@@ -1,4 +1,4 @@
-const tableNames = {
+export const blogTabels = {
   user: 'User',
   post: 'BlogPost',
   category: 'BlogCategory',
@@ -8,4 +8,16 @@ const tableNames = {
   bookmark: 'BlogBookmark',
 };
 
-export default tableNames;
+export const shopTables = {
+  user: 'User',
+  category: 'ShopCategory',
+  order: 'ShopOrder',
+  orderDetails: 'ShopOrderDetails',
+  payment: 'ShopPayment',
+  product: 'ShopProduct',
+  discount: 'ShopDiscount',
+  cart: 'ShopCart',
+  review: 'ShopReview',
+  address: 'ShopShippingAddress',
+  inventory: 'ShopInventory',
+};

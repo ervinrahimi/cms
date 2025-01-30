@@ -1,8 +1,8 @@
 import sdb from '@/db/surrealdb';
 import { bookmarksSchemaCreate } from '@/schemas/zod/blog';
 import { checkExists } from '@/utils/api/checkExists';
-import buildQuery from '@/utils/api/queryBuilder';
-import tableNames from '@/utils/api/tableNames';
+import buildQuery from '@/utils/api/blog/queryBuilder';
+import { blogTabels } from '@/utils/api/tableNames';
 import { handleZodError } from '@/utils/api/zod/errorHandler.ts';
 import { NextResponse } from 'next/server';
 import { RecordId } from 'surrealdb';
@@ -10,10 +10,10 @@ import { ZodError } from 'zod';
 
 /*
 
-  Route: "api/blog/bookmarks" [ POST - GET ]
+  Route: "api/blog/bookmark" [ POST - GET ]
  
-  GET: API handler for fetching all bookmarks from the "bookmarks" table in SurrealDB.
-  POST: API handler for creating a new post in the "bookmarks" table in SurrealDB.
+  GET: API handler for fetching all bookmarks from the "BlogBookmark" table in SurrealDB.
+  POST: API handler for creating a bookmark in the "BlogBookmark" table in SurrealDB.
 
 */
 
@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     const searchParams = url.searchParams;
     const db = await sdb();
 
-    const query = buildQuery(searchParams, tableNames.bookmark, ['created_at']);
+    const query = buildQuery(searchParams, blogTabels.bookmark, ['created_at']);
     const result = await db.query(query);
 
     return NextResponse.json(result, { status: 200 });
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
     const { user_ref, post_ref } = validatedBody;
 
     const postCheck = await checkExists(
-      tableNames.post,
+      blogTabels.post,
       post_ref,
       `Post with ID ${post_ref} not found.`
     );
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
     }
 
     const userCheck = await checkExists(
-      tableNames.user,
+      blogTabels.user,
       user_ref,
       `user with ID ${user_ref} not found.`
     );
@@ -62,8 +62,8 @@ export async function POST(req: Request) {
     }
 
     // Convert user_ref, post_ref and comments to RecordId objects
-    const userId = new RecordId(tableNames.user, user_ref);
-    const postId = new RecordId(tableNames.post, post_ref);
+    const userId = new RecordId(blogTabels.user, user_ref);
+    const postId = new RecordId(blogTabels.post, post_ref);
 
     const bookmarksData = {
       user_ref: userId,
@@ -72,7 +72,7 @@ export async function POST(req: Request) {
       updated_at: new Date(),
     };
 
-    const createdBookmarks = await db.create(tableNames.bookmark, bookmarksData);
+    const createdBookmarks = await db.create(blogTabels.bookmark, bookmarksData);
 
     return NextResponse.json(createdBookmarks, {
       status: 201,

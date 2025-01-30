@@ -13,19 +13,24 @@ export default function buildQuery(
   // Supported filters (with dynamic queryField)
   const filters = [
     { key: 'query', column: queryField }, // Map "query" to either "title" or "name"
-    { key: 'author', column: 'author' },
     { key: 'category', column: 'categories' },
-    { key: 'post_ref', column: 'post_ref' },
     { key: 'media_type', column: 'media_type' },
     { key: 'slug', column: 'slug' },
+    { key: 'city', column: 'city' },
+    { key: 'country', column: 'country' },
+    { key: 'price', column: 'price' },
   ];
+
+  function escapeValue(value: string): string {
+    return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/&/g, '\\&');
+  }
 
   // Iterate through filters and add conditions
   filters.forEach((filter) => {
     const value = searchParams.get(filter.key); // Get the value
     if (value) {
       const decodedValue = decodeURIComponent(value.trim()); // Decode and trim
-      const escapedValue = decodedValue.replace(/'/g, "\\'"); // Escape single quotes
+      const escapedValue = escapeValue(decodedValue); // Escape single quotes
       if (filter.key === 'query') {
         conditions.push(`${filter.column} CONTAINS '${escapedValue}'`);
       } else {
