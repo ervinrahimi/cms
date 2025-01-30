@@ -245,7 +245,7 @@ DEFINE FIELD stock ON ShopProduct
     ASSERT $value != NONE;
 // Create is_active field on ShopProduct table with assertation boolean datatype
 DEFINE FIELD is_active ON ShopProduct 
-    TYPE boolean 
+    TYPE bool 
     ASSERT $value != NONE;
 // Create coverImage field on ShopProduct table with assertation string datatype
 DEFINE FIELD coverImage ON ShopProduct 
@@ -487,7 +487,7 @@ DEFINE FIELD release_Date ON ShopCourse
     ASSERT $value != NONE;
 // Create is_active field on ShopCourse table with assertation boolean datatype
 DEFINE FIELD is_active ON ShopCourse 
-    TYPE boolean 
+    TYPE bool 
     ASSERT $value != NONE;
 // Create created_at field on ShopCourse table with datetime datatype
 DEFINE FIELD created_at ON ShopCourse 
