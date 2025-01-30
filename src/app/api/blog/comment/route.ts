@@ -1,8 +1,8 @@
 import sdb from '@/db/surrealdb';
 import { CommentSchemaCreate } from '@/schemas/zod/blog';
 import { checkExists } from '@/utils/api/checkExists';
-import buildQuery from '@/utils/api/queryBuilder';
-import tableNames from '@/utils/api/tableNames';
+import buildQuery from '@/utils/api/blog/queryBuilder';
+import { blogTabels } from '@/utils/api/tableNames';
 import { handleZodError } from '@/utils/api/zod/errorHandler.ts';
 import { NextRequest, NextResponse } from 'next/server';
 import { RecordId } from 'surrealdb';
@@ -10,10 +10,10 @@ import { ZodError } from 'zod';
 
 /*
 
-  Route: "api/blog/comments" [ POST - GET ]
+  Route: "api/blog/comment" [ POST - GET ]
  
- GET: API handler for fetching all comments from the "comments" table in SurrealDB.
- POST: API handler for creating a new comment in the "comments" table in SurrealDB.
+ GET: API handler for fetching all comments from the "BlogComment" table in SurrealDB.
+ POST: API handler for creating a new comment in the "BlogComment" table in SurrealDB.
 
 */
 
@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     const searchParams = url.searchParams;
     const db = await sdb();
 
-    const query = buildQuery(searchParams, tableNames.comment, ['created_at']);
+    const query = buildQuery(searchParams, blogTabels.comment, ['created_at']);
     const result = await db.query(query);
 
     return NextResponse.json(result, { status: 200 });
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     const { post_ref, user_ref, content, parent_id } = validatedBody;
 
     const postCheck = await checkExists(
-      tableNames.post,
+      blogTabels.post,
       post_ref,
       `Post with ID ${post_ref} not found.`
     );
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
     }
 
     const userCheck = await checkExists(
-      tableNames.user,
+      blogTabels.user,
       user_ref,
       `user with ID ${user_ref} not found.`
     );
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
 
     if (parent_id) {
       const postCheck = await checkExists(
-        tableNames.comment,
+        blogTabels.comment,
         parent_id,
         `Post with ID ${parent_id} not found.`
       );
@@ -73,10 +73,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Convert post_ref and user_ref to RecordId objects
-    const postId = new RecordId(tableNames.post, post_ref);
-    const userId = new RecordId(tableNames.user, user_ref);
+    const postId = new RecordId(blogTabels.post, post_ref);
+    const userId = new RecordId(blogTabels.user, user_ref);
     const commentData = {
-      parent_comment_ref: parent_id ? new RecordId(tableNames.category, parent_id) : undefined,
+      parent_comment_ref: parent_id ? new RecordId(blogTabels.category, parent_id) : undefined,
       post_ref: postId,
       user_ref: userId,
       content: content,
@@ -84,15 +84,15 @@ export async function POST(req: NextRequest) {
       updated_at: new Date(),
     };
 
-    const createdComment = await db.create(tableNames.comment, commentData);
+    const createdComment = await db.create(blogTabels.comment, commentData);
 
     if (createdComment?.length > 0) {
       const commentId = createdComment[0]?.id.id;
       if (commentId) {
         await db.query(
-          `UPDATE ${tableNames.post} SET comments += $comment_id WHERE id = $post_id`,
+          `UPDATE ${blogTabels.post} SET comments += $comment_id WHERE id = $post_id`,
           {
-            comment_id: new RecordId(tableNames.comment, commentId),
+            comment_id: new RecordId(blogTabels.comment, commentId),
             post_id: postId,
           }
         );

@@ -2,7 +2,7 @@ import sdb from '@/db/surrealdb';
 import { TagSchemaUpdate } from '@/schemas/zod/blog';
 import { checkExists } from '@/utils/api/checkExists';
 import prepareUpdates from '@/utils/api/generateUpdates';
-import tableNames from '@/utils/api/tableNames';
+import { blogTabels } from '@/utils/api/tableNames';
 import { handleZodError } from '@/utils/api/zod/errorHandler.ts';
 import { NextResponse } from 'next/server';
 import { Patch, RecordId } from 'surrealdb';
@@ -10,11 +10,11 @@ import { ZodError } from 'zod';
 
 /*
 
-  Route: "api/blog/tags/[id]" [ PUT - GET - DELETE ]
+  Route: "api/blog/tag/[id]" [ PUT - GET - DELETE ]
  
-  GET: API handler for fetching a specific tag from the "tags" table in SurrealDB.
-  PUT: API handler for updating a specific tag in the "tags" table in SurrealDB.
-  DELETE: API handler for deleting a specific tag from the "tags" table in SurrealDB.
+  GET: API handler for fetching a specific tag from the "BlogTag" table in SurrealDB.
+  PUT: API handler for updating a specific tag in the "BlogTag" table in SurrealDB.
+  DELETE: API handler for deleting a specific tag from the "BlogTag" table in SurrealDB.
 
 */
 
@@ -24,12 +24,12 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     const { id } = await params;
 
     // Check if the ID is valid
-    const tagCheck = await checkExists(tableNames.tag, id, `tag with ID ${id} not found.`);
+    const tagCheck = await checkExists(blogTabels.tag, id, `tag with ID ${id} not found.`);
     if (tagCheck !== true) {
       return tagCheck;
     }
 
-    const tag = await db.select(new RecordId(tableNames.tag, id));
+    const tag = await db.select(new RecordId(blogTabels.tag, id));
 
     return NextResponse.json(tag, { status: 200 });
   } catch (error: unknown) {
@@ -49,7 +49,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     const { id } = await params;
 
     // Check if the ID is valid
-    const tagCheck = await checkExists(tableNames.tag, id, `tag with ID ${id} not found.`);
+    const tagCheck = await checkExists(blogTabels.tag, id, `tag with ID ${id} not found.`);
     if (tagCheck !== true) {
       return tagCheck;
     }
@@ -65,7 +65,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 
     prepareUpdates(fields, updates);
 
-    const recordId = new RecordId(tableNames.tag, id);
+    const recordId = new RecordId(blogTabels.tag, id);
 
     // Apply the patch
     const updatedTag = await db.patch(recordId, updates);
@@ -94,13 +94,13 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     const { id } = await params;
 
     // Check if the ID is valid
-    const tagCheck = await checkExists(tableNames.tag, id, `tag with ID ${id} not found.`);
+    const tagCheck = await checkExists(blogTabels.tag, id, `tag with ID ${id} not found.`);
     if (tagCheck !== true) {
       return tagCheck;
     }
 
     // Delete the tag
-    await db.delete(new RecordId(tableNames.tag, id));
+    await db.delete(new RecordId(blogTabels.tag, id));
 
     return NextResponse.json({ message: 'tags deleted successfully.' }, { status: 200 });
   } catch (error: unknown) {

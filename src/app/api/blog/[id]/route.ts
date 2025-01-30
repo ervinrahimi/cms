@@ -2,7 +2,7 @@ import sdb from '@/db/surrealdb';
 import { PostSchemaUpdate } from '@/schemas/zod/blog';
 import { checkExists } from '@/utils/api/checkExists';
 import prepareUpdates from '@/utils/api/generateUpdates';
-import tableNames from '@/utils/api/tableNames';
+import { blogTabels } from '@/utils/api/tableNames';
 import { handleZodError } from '@/utils/api/zod/errorHandler.ts';
 import { NextResponse } from 'next/server';
 import { Patch, RecordId } from 'surrealdb';
@@ -11,9 +11,9 @@ import { ZodError } from 'zod';
 /*
   Route: "api/blog/[id]" [ PUT - GET - DELETE ]
  
-  GET: API handler for fetching a specific post from the "posts" table in SurrealDB.
-  PUT: API handler for updating a specific post in the "posts" table in SurrealDB.
-  DELETE: API handler for deleting a specific post from the "posts" table in SurrealDB.
+  GET: API handler for fetching a specific post from the "BlogPost" table in SurrealDB.
+  PUT: API handler for updating a specific post in the "BlogPost" table in SurrealDB.
+  DELETE: API handler for deleting a specific post from the "BlogPost" table in SurrealDB.
  */
 
 export async function GET(req: Request, { params }: { params: { id: string } }) {
@@ -22,12 +22,12 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     const { id } = await params;
 
     // Check if the ID is valid
-    const postCheck = await checkExists(tableNames.post, id, `Post with ID ${id} not found.`);
+    const postCheck = await checkExists(blogTabels.post, id, `Post with ID ${id} not found.`);
     if (postCheck !== true) {
       return postCheck;
     }
 
-    const post = await db.select(new RecordId(tableNames.post, id));
+    const post = await db.select(new RecordId(blogTabels.post, id));
 
     return NextResponse.json(post, { status: 200 });
   } catch (error: unknown) {
@@ -47,7 +47,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     const { id } = await params;
 
     // Check if the ID is valid
-    const postCheck = await checkExists(tableNames.post, id, `Post with ID ${id} not found.`);
+    const postCheck = await checkExists(blogTabels.post, id, `Post with ID ${id} not found.`);
     if (postCheck !== true) {
       return postCheck;
     }
@@ -55,10 +55,10 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     const { title, content, slug, author, categories, tags, likes, comments } = validatedBody;
 
     // Convert categories, tags, likes, and comments to RecordId objects
-    const categoryIds = categories?.map((cat: string) => new RecordId(tableNames.category, cat));
-    const tagIds = tags?.map((tag: string) => new RecordId(tableNames.tag, tag));
-    const likeIds = likes?.map((lik: string) => new RecordId(tableNames.like, lik));
-    const commentIds = comments?.map((com: string) => new RecordId(tableNames.comment, com));
+    const categoryIds = categories?.map((cat: string) => new RecordId(blogTabels.category, cat));
+    const tagIds = tags?.map((tag: string) => new RecordId(blogTabels.tag, tag));
+    const likeIds = likes?.map((lik: string) => new RecordId(blogTabels.like, lik));
+    const commentIds = comments?.map((com: string) => new RecordId(blogTabels.comment, com));
 
     const updates: Patch[] = [];
 
@@ -68,7 +68,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       { path: '/slug', value: slug },
       {
         path: '/author',
-        value: author ? new RecordId(tableNames.user, author) : undefined,
+        value: author ? new RecordId(blogTabels.user, author) : undefined,
       },
       { path: '/categories', value: categoryIds },
       { path: '/tags', value: tagIds },
@@ -78,7 +78,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 
     prepareUpdates(fields, updates);
 
-    const recordId = new RecordId(tableNames.post, id);
+    const recordId = new RecordId(blogTabels.post, id);
 
     // Apply the patch
     const updatedPost = await db.patch(recordId, updates);
@@ -107,13 +107,13 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     const { id } = await params;
 
     // Check if the ID is valid
-    const postCheck = await checkExists(tableNames.post, id, `Post with ID ${id} not found.`);
+    const postCheck = await checkExists(blogTabels.post, id, `Post with ID ${id} not found.`);
     if (postCheck !== true) {
       return postCheck;
     }
 
     // Delete the post
-    await db.delete(new RecordId(tableNames.post, id));
+    await db.delete(new RecordId(blogTabels.post, id));
 
     return NextResponse.json({ message: 'Post deleted successfully.' }, { status: 200 });
   } catch (error: unknown) {
