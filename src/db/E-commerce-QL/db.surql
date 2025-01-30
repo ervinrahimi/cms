@@ -24,6 +24,9 @@ DEFINE INDEX idx_User_id ON User
 // Define index clerk_id field for unique record
 DEFINE INDEX idx_User_clerk_id ON User 
     FIELDS clerk_id UNIQUE;
+
+// -------------------------------------------------------------------------------------------
+
 // Create a schemafull table Shop Category with name "ShopCategory"
 DEFINE TABLE ShopCategory SCHEMAFULL 
     PERMISSIONS
@@ -60,9 +63,6 @@ DEFINE INDEX idx_ShopCategory_slug ON ShopCategory
 // Define index parent_id field for unique record
 DEFINE INDEX idx_ShopCategory_parent_id ON ShopCategory 
     FIELDS parent_id;
-// Define index name field for unique record
-DEFINE INDEX idx_ShopCategory_name ON ShopCategory 
-    FIELDS name UNIQUE;
 
 // -------------------------------------------------------------------------------------------
 
@@ -126,7 +126,7 @@ DEFINE FIELD order_id ON ShopOrderDetails
     ASSERT $value != NONE;
 // Create product_id field on ShopOrderDetails table with assertation and have relation with ShopProduct table
 DEFINE FIELD product_id ON ShopOrderDetails 
-    TYPE array<record<ShopProduct>>
+    TYPE record<ShopProduct>
     ASSERT $value != NONE;
 // Create quantity field on ShopOrderDetails table with assertation number datatype
 DEFINE FIELD quantity ON ShopOrderDetails 
@@ -140,6 +140,9 @@ DEFINE FIELD pricePerUnit ON ShopOrderDetails
 DEFINE FIELD totalPrice ON ShopOrderDetails 
     TYPE number 
     ASSERT $value != NONE;
+// Create appliedDiscount field on ShopOrderDetails table with assertation number datatype
+DEFINE FIELD appliedDiscount ON ShopOrderDetails 
+    TYPE number;
 // Create created_at field on ShopOrderDetails table with datetime datatype
 DEFINE FIELD created_at ON ShopOrderDetails 
     TYPE datetime;
@@ -185,49 +188,25 @@ DEFINE FIELD paymentMethod ON ShopPayment
 DEFINE FIELD amount ON ShopPayment 
     TYPE number 
     ASSERT $value != NONE;
+// Create transaction_id field on ShopPayment table with assertation string datatype
+DEFINE FIELD transaction_id ON ShopPayment 
+    TYPE string 
+    ASSERT $value != NONE;
 // Create created_at field on ShopPayment table with datetime datatype
 DEFINE FIELD created_at ON ShopPayment 
     TYPE datetime;
 // Create updated_at field on ShopPayment table with datetime datatype
 DEFINE FIELD updated_at ON ShopPayment 
     TYPE datetime VALUE time::now();
+// Create metadata field on ShopPayment table with assertation string datatype
+DEFINE FIELD metadata ON ShopPayment 
+    TYPE object;
 // Define index id field for unique record
 DEFINE INDEX idx_ShopPayment_id ON ShopPayment 
     FIELDS id UNIQUE;
-
-// ------------------------------------------------------------------------------------------
-
-// Create a schemafull table Shop Payment with name "ShopPayment"
-DEFINE TABLE ShopInventory SCHEMAFULL 
-    PERMISSIONS
-        FOR select, create, update, delete
-        WHERE id = $auth.id; 
-// Create id field on ShopInventory table with assertation string datatype
-DEFINE FIELD id ON ShopInventory 
-    TYPE string 
-    ASSERT $value != NONE;
-// Create product_id field on ShopInventory table with assertation and have relation with ShopProduct table
-DEFINE FIELD product_id ON ShopInventory 
-    TYPE array<record<ShopProduct>> 
-    ASSERT $value != NONE;
-// Create quantity field on ShopInventory table with assertation number datatype
-DEFINE FIELD quantity ON ShopInventory 
-    TYPE number 
-    ASSERT $value != NONE;
-// Create wareHouseLocation field on ShopInventory table with assertation string datatype
-DEFINE FIELD wareHouseLocation ON ShopInventory 
-    TYPE string 
-    ASSERT $value != NONE;
-// Create created_at field on ShopInventory table with datetime datatype
-DEFINE FIELD created_at ON ShopInventory 
-    TYPE datetime;
-// Create updated_at field on ShopInventory table with datetime datatype
-DEFINE FIELD updated_at ON ShopInventory 
-    TYPE datetime 
-    VALUE time::now();
-// Define index id field for unique record
-DEFINE INDEX idx_ShopInventory_id ON ShopInventory 
-    FIELDS id UNIQUE;
+// Define index order_id field for unique record
+DEFINE INDEX idx_ShopPayment_order_id ON ShopPayment 
+    FIELDS order_id;
 
 // ------------------------------------------------------------------------------------------
 
@@ -262,8 +241,21 @@ DEFINE FIELD price ON ShopProduct
     ASSERT $value != NONE;
 // Create stock field on ShopProduct table with assertation number datatype
 DEFINE FIELD stock ON ShopProduct 
-    TYPE record<ShopInventory> 
+    TYPE number
     ASSERT $value != NONE;
+// Create is_active field on ShopProduct table with assertation boolean datatype
+DEFINE FIELD is_active ON ShopProduct 
+    TYPE boolean 
+    ASSERT $value != NONE;
+// Create coverImage field on ShopProduct table with assertation string datatype
+DEFINE FIELD coverImage ON ShopProduct 
+    TYPE string;
+// Create files field on ShopProduct table with assertation array datatype
+DEFINE FIELD files ON ShopProduct 
+    TYPE array<string>;
+// Create metadata field on ShopProduct table with assertation string datatype
+DEFINE FIELD metadata ON ShopProduct 
+    TYPE object;
 // Create created_at field on ShopProduct table with datetime datatype
 DEFINE FIELD created_at ON ShopProduct 
     TYPE datetime;
@@ -347,7 +339,7 @@ DEFINE FIELD id ON ShopCart
     ASSERT $value != NONE;
 // Create user_id field on ShopCart table with assertation and have relation with User table
 DEFINE FIELD user_id ON ShopCart 
-    TYPE array<record<User>> 
+    TYPE record<User>
     ASSERT $value != NONE;
 // Create items field on ShopCart table with assertation array datatype
 DEFINE FIELD items ON ShopCart 
@@ -458,3 +450,109 @@ DEFINE INDEX idx_ShopShippingAddress_user_id ON ShopShippingAddress
 // Define index postal_code field for unique record
 DEFINE INDEX idx_ShopShippingAddress_postal_code ON ShopShippingAddress 
     FIELDS postal_code;
+
+// ------------------------------------------------------------------------------------------
+
+// Create a schemafull table Shop Course with name "ShopCourse"
+DEFINE TABLE ShopCourse SCHEMAFULL 
+    PERMISSIONS
+        FOR select, create, update, delete
+        WHERE id = $auth.id;
+// Create id field on ShopCourse table with assertation string datatype
+DEFINE FIELD id ON ShopCourse 
+    TYPE string 
+    ASSERT $value != NONE;
+// Create product_id field on ShopCourse table with assertation and have relation with ShopProduct table
+DEFINE FIELD product_id ON ShopCourse 
+    TYPE record<ShopProduct> 
+    ASSERT $value != NONE;
+// Create teacher_id field on ShopCourse table with assertation and have relation with User table
+DEFINE FIELD teacher_id ON ShopCourse 
+    TYPE record<User> 
+    ASSERT $value != NONE;
+// Create title field on ShopCourse table with assertation string datatype
+DEFINE FIELD title ON ShopCourse 
+    TYPE string 
+    ASSERT $value != NONE;
+// Create description field on ShopCourse table with assertation string datatype
+DEFINE FIELD description ON ShopCourse 
+    TYPE string 
+    ASSERT $value != NONE;
+// Create CoverImage field on ShopCourse table with assertation string datatype
+DEFINE FIELD CoverImage ON ShopCourse 
+    TYPE string;
+// Create release_Date field on ShopCourse table with assertation datetime datatype
+DEFINE FIELD release_Date ON ShopCourse 
+    TYPE datetime 
+    ASSERT $value != NONE;
+// Create is_active field on ShopCourse table with assertation boolean datatype
+DEFINE FIELD is_active ON ShopCourse 
+    TYPE boolean 
+    ASSERT $value != NONE;
+// Create created_at field on ShopCourse table with datetime datatype
+DEFINE FIELD created_at ON ShopCourse 
+    TYPE datetime;
+// Create updated_at field on ShopCourse table with datetime datatype
+DEFINE FIELD updated_at ON ShopCourse 
+    TYPE datetime 
+    VALUE time::now();
+// Define index id field for unique record
+DEFINE INDEX idx_ShopCourse_id ON ShopCourse 
+    FIELDS id UNIQUE;
+// Define index product_id field for unique record
+DEFINE INDEX idx_ShopCourse_product_id ON ShopCourse 
+    FIELDS product_id;
+// Define index teacher_id field for unique record
+DEFINE INDEX idx_ShopCourse_teacher_id ON ShopCourse 
+    FIELDS teacher_id;
+
+// ------------------------------------------------------------------------------------------
+
+// Create a schemafull table Shop Course Lesson with name "ShopCourseLesson"
+DEFINE TABLE ShopCourseLesson SCHEMAFULL 
+    PERMISSIONS
+        FOR select, create, update, delete
+        WHERE id = $auth.id;
+// Create id field on ShopCourseLesson table with assertation string datatype
+DEFINE FIELD id ON ShopCourseLesson 
+    TYPE string 
+    ASSERT $value != NONE;
+// Create course_id field on ShopCourseLesson table with assertation and have relation with ShopCourse table
+DEFINE FIELD course_id ON ShopCourseLesson 
+    TYPE record<ShopCourse> 
+    ASSERT $value != NONE;
+// Create title field on ShopCourseLesson table with assertation string datatype
+DEFINE FIELD title ON ShopCourseLesson 
+    TYPE string 
+    ASSERT $value != NONE;
+// Create video_url field on ShopCourseLesson table with assertation string datatype
+DEFINE FIELD video_url ON ShopCourseLesson 
+    TYPE string 
+    ASSERT $value != NONE;
+// Create duration field on ShopCourseLesson table with assertation number datatype
+DEFINE FIELD duration ON ShopCourseLesson 
+    TYPE number 
+    ASSERT $value != NONE;
+// Create image field on ShopCourseLesson table with assertation string datatype
+DEFINE FIELD image ON ShopCourseLesson 
+    TYPE array<string>;
+// Create sort_order field on ShopCourseLesson table with assertation number datatype
+DEFINE FIELD sort_order ON ShopCourseLesson 
+    TYPE number 
+    ASSERT $value != NONE;
+// Create created_at field on ShopCourseLesson table with datetime datatype
+DEFINE FIELD created_at ON ShopCourseLesson 
+    TYPE datetime;
+// Create updated_at field on ShopCourseLesson table with datetime datatype
+DEFINE FIELD updated_at ON ShopCourseLesson 
+    TYPE datetime 
+    VALUE time::now();
+// Define index id field for unique record
+DEFINE INDEX idx_ShopCourseLesson_id ON ShopCourseLesson 
+    FIELDS id UNIQUE;
+// Define index course_id field for unique record
+DEFINE INDEX idx_ShopCourseLesson_course_id ON ShopCourseLesson 
+    FIELDS course_id;
+// Define index video_url field for unique record
+DEFINE INDEX idx_ShopCourseLesson_video_url ON ShopCourseLesson 
+    FIELDS video_url;
