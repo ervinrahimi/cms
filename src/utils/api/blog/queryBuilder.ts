@@ -12,7 +12,7 @@ export default function buildQuery(
 
   // Supported filters (with dynamic queryField)
   const filters = [
-    { key: 'query', column: queryField }, // Map "query" to either "title" or "name"
+    { key: 'query', column: queryField },
     { key: 'author', column: 'author' },
     { key: 'category', column: 'categories' },
     { key: 'post_ref', column: 'post_ref' },
@@ -21,10 +21,7 @@ export default function buildQuery(
   ];
 
   function escapeValue(value: string): string {
-    return value
-      .replace(/\\/g, '\\\\') // Escape backslashes
-      .replace(/'/g, "\\'") // Escape single quotes
-      .replace(/&/g, '\\&'); // Escape ampersands
+    return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
   }
 
   // Iterate through filters and add conditions
@@ -34,7 +31,7 @@ export default function buildQuery(
       const decodedValue = decodeURIComponent(value.trim()); // Decode and trim
       const escapedValue = escapeValue(decodedValue); // Escape single quotes
       if (filter.key === 'query') {
-        conditions.push(`${filter.column} CONTAINS '${escapedValue}'`);
+        conditions.push(`${filter.column} ?~ '${escapedValue}'`);
       } else {
         conditions.push(`${filter.column} = '${escapedValue}'`);
       }

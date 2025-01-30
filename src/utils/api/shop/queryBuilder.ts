@@ -12,7 +12,7 @@ export default function buildQuery(
 
   // Supported filters (with dynamic queryField)
   const filters = [
-    { key: 'query', column: queryField }, // Map "query" to either "title" or "name"
+    { key: 'query', column: queryField },
     { key: 'category', column: 'categories' },
     { key: 'media_type', column: 'media_type' },
     { key: 'slug', column: 'slug' },
@@ -22,7 +22,7 @@ export default function buildQuery(
   ];
 
   function escapeValue(value: string): string {
-    return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/&/g, '\\&');
+    return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
   }
 
   // Iterate through filters and add conditions
@@ -32,7 +32,7 @@ export default function buildQuery(
       const decodedValue = decodeURIComponent(value.trim()); // Decode and trim
       const escapedValue = escapeValue(decodedValue); // Escape single quotes
       if (filter.key === 'query') {
-        conditions.push(`${filter.column} CONTAINS '${escapedValue}'`);
+        conditions.push(`${filter.column} ?~ '${escapedValue}'`);
       } else {
         conditions.push(`${filter.column} = '${escapedValue}'`);
       }
