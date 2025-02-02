@@ -280,44 +280,54 @@ DEFINE INDEX idx_ShopProduct_category_id ON ShopProduct
     FIELDS category_id;
 
 // ------------------------------------------------------------------------------------------
-// Create a schemafull table Shop Coupon with name "ShopCoupon"
-DEFINE TABLE ShopCoupon SCHEMAFULL 
+
+// Create a schemafull table Shop Discount with name "ShopDiscount"
+DEFINE TABLE ShopDiscount SCHEMAFULL 
     PERMISSIONS
         FOR select, create, update, delete
-        WHERE id = $auth.id;
-// Create id field on ShopCoupon table with assertation string datatype
-DEFINE FIELD id ON ShopCoupon 
+        WHERE id = $auth.id; 
+// Create id field on ShopDiscount table with assertation string datatype
+DEFINE FIELD id ON ShopDiscount 
     TYPE string 
     ASSERT $value != NONE;
-// Create discountCode field on ShopCoupon table with assertation string datatype
-DEFINE FIELD discountCode ON ShopCoupon 
+// Create product_id field on ShopDiscount table with assertation and have relation with ShopProduct table
+DEFINE FIELD product_id ON ShopDiscount 
+    TYPE array<record<ShopProduct>> 
+    ASSERT $value != NONE;
+// Create name field on ShopDiscount table with assertation string datatype
+DEFINE FIELD name ON ShopDiscount 
     TYPE string 
     ASSERT $value != NONE;
-// Create discountPercentage field on ShopCoupon table with assertation number datatype
-DEFINE FIELD discountPercentage ON ShopCoupon 
-    TYPE number 
-    ASSERT $value > 0 AND $value <= 100;
-// Create usageLimit field on ShopCoupon table with assertation number datatype
-DEFINE FIELD usageLimit ON ShopCoupon 
+// Create usageLimit field on ShopDiscount table with assertation number datatype
+DEFINE FIELD usageLimit ON ShopDiscount 
     TYPE number 
     ASSERT $value != NONE;
-// Create expiration_date field on ShopCoupon table with assertation datetime datatype
-DEFINE FIELD expiration_date ON ShopCoupon 
+// Create discountCode field on ShopDiscount table with assertation string datatype
+DEFINE FIELD discountCode ON ShopDiscount 
+    TYPE string 
+    ASSERT $value != NONE;
+// Create discountPercentage field on ShopDiscount table with assertation number datatype
+DEFINE FIELD discountPercentage ON ShopDiscount 
+    TYPE number 
+    ASSERT $value != NONE;
+// Create startDate field on ShopDiscount table with assertation datetime datatype
+DEFINE FIELD startDate ON ShopDiscount 
     TYPE datetime 
     ASSERT $value != NONE;
-// Create is_active field on ShopCoupon table with assertation boolean datatype
-DEFINE FIELD created_at ON ShopCoupon 
+// Create endDate field on ShopDiscount table with assertation datetime datatype
+DEFINE FIELD endDate ON ShopDiscount 
+    TYPE datetime 
+    ASSERT $value != NONE;
+// Create created_at field on ShopDiscount table with datetime datatype
+DEFINE FIELD created_at ON ShopDiscount 
     TYPE datetime;
-// Create updated_at field on ShopCoupon table with datetime datatype
-DEFINE FIELD updated_at ON ShopCoupon 
+// Create updated_at field on ShopDiscount table with datetime datatype
+DEFINE FIELD updated_at ON ShopDiscount 
     TYPE datetime 
     VALUE time::now();
 // Define index id field for unique record
-DEFINE INDEX idx_ShopCoupon_id ON ShopCoupon 
+DEFINE INDEX idx_ShopDiscount_id ON ShopDiscount 
     FIELDS id UNIQUE;
-// Define index discountCode field for unique record
-DEFINE INDEX idx_ShopCoupon_discountCode ON ShopCoupon 
-    FIELDS discountCode UNIQUE;
 
 // ------------------------------------------------------------------------------------------
 
