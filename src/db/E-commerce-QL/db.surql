@@ -81,8 +81,7 @@ DEFINE FIELD user_id ON ShopOrder
     ASSERT $value != NONE;
 // Create shipping_address_id field on ShopOrder table with assertation and have relation with ShopShippingAddress table
 DEFINE FIELD shipping_address_id ON ShopOrder 
-    TYPE record<ShopShippingAddress> 
-    ASSERT $value != NONE;
+    TYPE option<record<ShopShippingAddress>>;
 // Create orderDate field on ShopOrder table with assertation datetime datatype
 DEFINE FIELD orderDate ON ShopOrder 
     TYPE datetime 
@@ -247,6 +246,10 @@ DEFINE FIELD stock ON ShopProduct
 DEFINE FIELD is_active ON ShopProduct 
     TYPE bool 
     ASSERT $value != NONE;
+// Create product_type field on ShopProduct table with assertation string datatype
+DEFINE FIELD product_type ON ShopProduct 
+    TYPE string 
+    ASSERT $value IN ["physical", "digital"];
 // Create coverImage field on ShopProduct table with assertation string datatype
 DEFINE FIELD coverImage ON ShopProduct 
     TYPE string;
@@ -277,54 +280,44 @@ DEFINE INDEX idx_ShopProduct_category_id ON ShopProduct
     FIELDS category_id;
 
 // ------------------------------------------------------------------------------------------
-
-// Create a schemafull table Shop Discount with name "ShopDiscount"
-DEFINE TABLE ShopDiscount SCHEMAFULL 
+// Create a schemafull table Shop Coupon with name "ShopCoupon"
+DEFINE TABLE ShopCoupon SCHEMAFULL 
     PERMISSIONS
         FOR select, create, update, delete
-        WHERE id = $auth.id; 
-// Create id field on ShopDiscount table with assertation string datatype
-DEFINE FIELD id ON ShopDiscount 
+        WHERE id = $auth.id;
+// Create id field on ShopCoupon table with assertation string datatype
+DEFINE FIELD id ON ShopCoupon 
     TYPE string 
     ASSERT $value != NONE;
-// Create product_id field on ShopDiscount table with assertation and have relation with ShopProduct table
-DEFINE FIELD product_id ON ShopDiscount 
-    TYPE array<record<ShopProduct>> 
-    ASSERT $value != NONE;
-// Create name field on ShopDiscount table with assertation string datatype
-DEFINE FIELD name ON ShopDiscount 
+// Create discountCode field on ShopCoupon table with assertation string datatype
+DEFINE FIELD discountCode ON ShopCoupon 
     TYPE string 
     ASSERT $value != NONE;
-// Create usageLimit field on ShopDiscount table with assertation number datatype
-DEFINE FIELD usageLimit ON ShopDiscount 
+// Create discountPercentage field on ShopCoupon table with assertation number datatype
+DEFINE FIELD discountPercentage ON ShopCoupon 
+    TYPE number 
+    ASSERT $value > 0 AND $value <= 100;
+// Create usageLimit field on ShopCoupon table with assertation number datatype
+DEFINE FIELD usageLimit ON ShopCoupon 
     TYPE number 
     ASSERT $value != NONE;
-// Create discountCode field on ShopDiscount table with assertation string datatype
-DEFINE FIELD discountCode ON ShopDiscount 
-    TYPE string 
-    ASSERT $value != NONE;
-// Create discountPercentage field on ShopDiscount table with assertation number datatype
-DEFINE FIELD discountPercentage ON ShopDiscount 
-    TYPE number 
-    ASSERT $value != NONE;
-// Create startDate field on ShopDiscount table with assertation datetime datatype
-DEFINE FIELD startDate ON ShopDiscount 
+// Create expiration_date field on ShopCoupon table with assertation datetime datatype
+DEFINE FIELD expiration_date ON ShopCoupon 
     TYPE datetime 
     ASSERT $value != NONE;
-// Create endDate field on ShopDiscount table with assertation datetime datatype
-DEFINE FIELD endDate ON ShopDiscount 
-    TYPE datetime 
-    ASSERT $value != NONE;
-// Create created_at field on ShopDiscount table with datetime datatype
-DEFINE FIELD created_at ON ShopDiscount 
+// Create is_active field on ShopCoupon table with assertation boolean datatype
+DEFINE FIELD created_at ON ShopCoupon 
     TYPE datetime;
-// Create updated_at field on ShopDiscount table with datetime datatype
-DEFINE FIELD updated_at ON ShopDiscount 
+// Create updated_at field on ShopCoupon table with datetime datatype
+DEFINE FIELD updated_at ON ShopCoupon 
     TYPE datetime 
     VALUE time::now();
 // Define index id field for unique record
-DEFINE INDEX idx_ShopDiscount_id ON ShopDiscount 
+DEFINE INDEX idx_ShopCoupon_id ON ShopCoupon 
     FIELDS id UNIQUE;
+// Define index discountCode field for unique record
+DEFINE INDEX idx_ShopCoupon_discountCode ON ShopCoupon 
+    FIELDS discountCode UNIQUE;
 
 // ------------------------------------------------------------------------------------------
 
@@ -450,109 +443,3 @@ DEFINE INDEX idx_ShopShippingAddress_user_id ON ShopShippingAddress
 // Define index postal_code field for unique record
 DEFINE INDEX idx_ShopShippingAddress_postal_code ON ShopShippingAddress 
     FIELDS postal_code;
-
-// ------------------------------------------------------------------------------------------
-
-// Create a schemafull table Shop Course with name "ShopCourse"
-DEFINE TABLE ShopCourse SCHEMAFULL 
-    PERMISSIONS
-        FOR select, create, update, delete
-        WHERE id = $auth.id;
-// Create id field on ShopCourse table with assertation string datatype
-DEFINE FIELD id ON ShopCourse 
-    TYPE string 
-    ASSERT $value != NONE;
-// Create product_id field on ShopCourse table with assertation and have relation with ShopProduct table
-DEFINE FIELD product_id ON ShopCourse 
-    TYPE record<ShopProduct> 
-    ASSERT $value != NONE;
-// Create teacher_id field on ShopCourse table with assertation and have relation with User table
-DEFINE FIELD teacher_id ON ShopCourse 
-    TYPE record<User> 
-    ASSERT $value != NONE;
-// Create title field on ShopCourse table with assertation string datatype
-DEFINE FIELD title ON ShopCourse 
-    TYPE string 
-    ASSERT $value != NONE;
-// Create description field on ShopCourse table with assertation string datatype
-DEFINE FIELD description ON ShopCourse 
-    TYPE string 
-    ASSERT $value != NONE;
-// Create CoverImage field on ShopCourse table with assertation string datatype
-DEFINE FIELD CoverImage ON ShopCourse 
-    TYPE string;
-// Create release_Date field on ShopCourse table with assertation datetime datatype
-DEFINE FIELD release_Date ON ShopCourse 
-    TYPE datetime 
-    ASSERT $value != NONE;
-// Create is_active field on ShopCourse table with assertation boolean datatype
-DEFINE FIELD is_active ON ShopCourse 
-    TYPE bool 
-    ASSERT $value != NONE;
-// Create created_at field on ShopCourse table with datetime datatype
-DEFINE FIELD created_at ON ShopCourse 
-    TYPE datetime;
-// Create updated_at field on ShopCourse table with datetime datatype
-DEFINE FIELD updated_at ON ShopCourse 
-    TYPE datetime 
-    VALUE time::now();
-// Define index id field for unique record
-DEFINE INDEX idx_ShopCourse_id ON ShopCourse 
-    FIELDS id UNIQUE;
-// Define index product_id field for unique record
-DEFINE INDEX idx_ShopCourse_product_id ON ShopCourse 
-    FIELDS product_id;
-// Define index teacher_id field for unique record
-DEFINE INDEX idx_ShopCourse_teacher_id ON ShopCourse 
-    FIELDS teacher_id;
-
-// ------------------------------------------------------------------------------------------
-
-// Create a schemafull table Shop Course Lesson with name "ShopCourseLesson"
-DEFINE TABLE ShopCourseLesson SCHEMAFULL 
-    PERMISSIONS
-        FOR select, create, update, delete
-        WHERE id = $auth.id;
-// Create id field on ShopCourseLesson table with assertation string datatype
-DEFINE FIELD id ON ShopCourseLesson 
-    TYPE string 
-    ASSERT $value != NONE;
-// Create course_id field on ShopCourseLesson table with assertation and have relation with ShopCourse table
-DEFINE FIELD course_id ON ShopCourseLesson 
-    TYPE record<ShopCourse> 
-    ASSERT $value != NONE;
-// Create title field on ShopCourseLesson table with assertation string datatype
-DEFINE FIELD title ON ShopCourseLesson 
-    TYPE string 
-    ASSERT $value != NONE;
-// Create video_url field on ShopCourseLesson table with assertation string datatype
-DEFINE FIELD video_url ON ShopCourseLesson 
-    TYPE string 
-    ASSERT $value != NONE;
-// Create duration field on ShopCourseLesson table with assertation number datatype
-DEFINE FIELD duration ON ShopCourseLesson 
-    TYPE number 
-    ASSERT $value != NONE;
-// Create image field on ShopCourseLesson table with assertation string datatype
-DEFINE FIELD image ON ShopCourseLesson 
-    TYPE array<string>;
-// Create sort_order field on ShopCourseLesson table with assertation number datatype
-DEFINE FIELD sort_order ON ShopCourseLesson 
-    TYPE number 
-    ASSERT $value != NONE;
-// Create created_at field on ShopCourseLesson table with datetime datatype
-DEFINE FIELD created_at ON ShopCourseLesson 
-    TYPE datetime;
-// Create updated_at field on ShopCourseLesson table with datetime datatype
-DEFINE FIELD updated_at ON ShopCourseLesson 
-    TYPE datetime 
-    VALUE time::now();
-// Define index id field for unique record
-DEFINE INDEX idx_ShopCourseLesson_id ON ShopCourseLesson 
-    FIELDS id UNIQUE;
-// Define index course_id field for unique record
-DEFINE INDEX idx_ShopCourseLesson_course_id ON ShopCourseLesson 
-    FIELDS course_id;
-// Define index video_url field for unique record
-DEFINE INDEX idx_ShopCourseLesson_video_url ON ShopCourseLesson 
-    FIELDS video_url;
