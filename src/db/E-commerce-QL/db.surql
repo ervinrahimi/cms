@@ -8,7 +8,7 @@ DEFINE TABLE User SCHEMAFULL
 
 DEFINE FIELD id ON User TYPE string ASSERT $value != NONE;
 DEFINE FIELD clerk_id ON User TYPE string ASSERT $value != NONE;
-DEFINE FIELD created_at ON User TYPE datetime DEFAULT time::now();
+DEFINE FIELD created_at ON User TYPE datetime;
 DEFINE FIELD updated_at ON User TYPE datetime VALUE time::now();
 
 DEFINE INDEX idx_User_id ON User FIELDS id UNIQUE;
