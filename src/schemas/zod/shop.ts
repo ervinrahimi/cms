@@ -31,3 +31,26 @@ export const DiscountSchemaCreate = z.object({
   startDate: z.string().nonempty(), 
   endDate: z.string().nonempty(),
 });
+
+export const CategorySchemaCreate = z.object({
+  parent_id: z.string().optional(),
+  name: z.string().min(3, errorText.name).nonempty(),
+  slug: z.string().min(3, errorText.slug).nonempty(),
+});
+
+export const CategorySchemaUpdate = z.object({
+  parent_id: z.string().optional(),
+  name: z.string().min(3, errorText.name).optional(),
+  slug: z.string().min(3, errorText.slug).optional(),
+});
+
+export const PaymentSchemaCreate = z.object({
+  order_id: z.string().nonempty(),
+  product_id: z.array(z.string()).nonempty(),
+  paymentDate:  z.date(),
+  paymentMethod: z.enum(['Credit Card', 'PayPal', 'etc.']),
+  amount: z.number().nonnegative(),
+  transaction_id: z.string().nonempty(),
+  metadata: z.object({}).optional(),
+});
+
