@@ -1,7 +1,12 @@
 import sdb from '@/db/surrealdb';
+import { ShopOrderSchemaCreate } from '@/schemas/zod/shop';
+import { checkExists } from '@/utils/api/checkExists';
 import buildQuery from '@/utils/api/shop/queryBuilder';
 import { shopTables } from '@/utils/api/tableNames';
-import { NextResponse } from 'next/server';
+import { handleZodError } from '@/utils/api/zod/errorHandler.ts';
+import { NextRequest, NextResponse } from 'next/server';
+import { RecordId } from 'surrealdb';
+import { ZodError } from 'zod';
 
 /*
 
@@ -25,6 +30,59 @@ export async function GET(request: Request) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
       { message: 'An error occurred', error: errorMessage },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const db = await sdb();
+    const validatedBody = ShopOrderSchemaCreate.parse(body);
+    const { user_id, shipping_address_id, totalAmount, status } = validatedBody;
+
+    const userCheck = await checkExists(
+      shopTables.user,
+      user_id,
+      `user with ID ${user_id} not found.`
+    );
+    if (userCheck !== true) {
+      return userCheck;
+    }
+
+    const addressCheck = await checkExists(
+      shopTables.address,
+      shipping_address_id,
+      `Address with ID ${shipping_address_id} not found.`
+    );
+    if (addressCheck !== true) {
+      return addressCheck;
+    }
+
+    const userId = new RecordId(shopTables.user, user_id);
+    const shippingAddressId = new RecordId(shopTables.address, shipping_address_id);
+
+    const orderData = {
+      user_id: userId,
+      shipping_address_id: shippingAddressId,
+      orderDate: new Date(),
+      totalAmount: totalAmount,
+      status: status,
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
+
+    const createdShopOrder = await db.create(shopTables.order, orderData);
+
+    return NextResponse.json(createdShopOrder, { status: 201 });
+  } catch (error: unknown) {
+    if (error instanceof ZodError) {
+      return handleZodError(error);
+    }
+    const err = error as Error;
+    return NextResponse.json(
+      { error: 'Failed to create order', details: err.message },
       { status: 500 }
     );
   }
