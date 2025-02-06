@@ -51,6 +51,17 @@ export const PaymentSchemaCreate = z.object({
   paymentMethod: z.enum(['Credit Card', 'PayPal', 'etc.']),
   amount: z.number().nonnegative(),
   transaction_id: z.string().nonempty(),
-  metadata: z.object({}).optional(),
+  metadata: z.record(z.any()).optional()
 });
+
+export const PaymentSchemaUpdate = z.object({
+  order_id: z.string().optional(),
+  product_id: z.array(z.string()).optional(),
+  paymentDate:  z.date().optional(),
+  paymentMethod: z.enum(['Credit Card', 'PayPal', 'etc.']).optional(),
+  amount: z.number().nonnegative(),
+  transaction_id: z.string().optional(),
+  metadata: z.record(z.any()).optional()
+});
+
 

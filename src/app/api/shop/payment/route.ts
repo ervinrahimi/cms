@@ -54,9 +54,7 @@ export async function POST(req: NextRequest) {
 
     // Convert paymentDate to Date object
   
-
-    // Check if order exists
-    for (const productId of product_id) {
+   / for (const productId of product_id) {
       const productCheck = await checkExists(
         shopTables.product,
         productId,
@@ -74,7 +72,8 @@ export async function POST(req: NextRequest) {
     );
     if (orderCheck !== true) {
       return orderCheck;
-    } 
+    }  
+      console.log("Metadata after validation:", metadata);
     const orderId = new RecordId(shopTables.order, order_id);
 
     const productIds = product_id.map(
