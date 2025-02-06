@@ -23,18 +23,15 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     const db = await sdb();
     const { id } = await params;
 
-    const orderDetailsCheck = await checkExists(
-      shopTables.orderDetails,
-      id,
-      `Order detail with ID ${id} not found.`
-    );
-    if (orderDetailsCheck !== true) {
-      return orderDetailsCheck;
+    // Check if the ID is valid
+    const orderDetailCheck = await checkExists(shopTables.orderDetails, id, `Order detail with ID ${id} not found.`);
+    if (orderDetailCheck !== true) {
+      return orderDetailCheck;
     }
 
-    const orderDetails = await db.select(new RecordId(shopTables.orderDetails, id));
+    const orderDetail = await db.select(new RecordId(shopTables.orderDetails, id));
 
-    return NextResponse.json(orderDetails, { status: 200 });
+    return NextResponse.json(orderDetail, { status: 200 });
   } catch (error: unknown) {
     return NextResponse.json(
       { error: 'Failed to fetch order detail', details: (error as Error).message },
@@ -48,47 +45,39 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
   try {
     const db = await sdb();
-    const body = await req.json();
     const { id } = await params;
+    const body = await req.json();
 
-    const orderDetailsCheck = await checkExists(
-      shopTables.orderDetails,
-      id,
-      `Order detail with ID ${id} not found.`
-    );
-    if (orderDetailsCheck !== true) {
-      return orderDetailsCheck;
+    // Check if the ID is valid
+    const orderDetailCheck = await checkExists(shopTables.orderDetails, id, `Order detail with ID ${id} not found.`);
+    if (orderDetailCheck !== true) {
+      return orderDetailCheck;
     }
 
     const validatedBody = ShopOrderDetailsSchemaUpdate.parse(body);
-    const { order_ref, product_ref, quantity, pricePerUnit, totalPrice, appliedDiscount } =
-      validatedBody;
+    const { order_id, product_id, quantity, pricePerUnit, totalPrice, appliedDiscount } = validatedBody;
 
-    if (order_ref) {
-      const orderCheck = await checkExists(
-        shopTables.order,
-        order_ref,
-        `Order with ID ${order_ref} not found.`
-      );
+    // Check if the order_id is valid
+    if (order_id) {
+      const orderCheck = await checkExists(shopTables.order, order_id, `Order with ID ${order_id} not found.`);
       if (orderCheck !== true) {
         return orderCheck;
       }
     }
-    if (product_ref) {
-      const productCheck = await checkExists(
-        shopTables.product,
-        product_ref,
-        `Product with ID ${product_ref} not found.`
-      );
+
+    // Check if the product_id is valid
+    if (product_id) {
+      const productCheck = await checkExists(shopTables.product, product_id, `Product with ID ${product_id} not found.`);
       if (productCheck !== true) {
         return productCheck;
       }
     }
 
     const updates: Patch[] = [];
+
     const fields = [
-      { path: '/order_ref', value: order_ref },
-      { path: '/product_ref', value: product_ref },
+      { path: '/order_id', value: order_id ? new RecordId(shopTables.order, order_id) : undefined },
+      { path: '/product_id', value: product_id ? new RecordId(shopTables.product, product_id) : undefined },
       { path: '/quantity', value: quantity },
       { path: '/pricePerUnit', value: pricePerUnit },
       { path: '/totalPrice', value: totalPrice },
@@ -100,17 +89,19 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     const recordId = new RecordId(shopTables.orderDetails, id);
 
     // Apply the patch
-    const updatedOrderDetails = await db.patch(recordId, updates);
+    const updatedOrderDetail = await db.patch(recordId, updates);
 
-    return NextResponse.json(updatedOrderDetails, {
+    return NextResponse.json(updatedOrderDetail, {
       status: 200,
     });
   } catch (error: unknown) {
     if (error instanceof ZodError) {
       return handleZodError(error);
     }
+
+    const err = error as Error;
     return NextResponse.json(
-      { error: 'Failed to update order detail', details: (error as Error).message },
+      { error: 'Failed to update order detail', details: err.message },
       {
         status: 500,
       }
@@ -123,30 +114,19 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     const db = await sdb();
     const { id } = await params;
 
-    const orderDetailsCheck = await checkExists(
-      shopTables.orderDetails,
-      id,
-      `Order detail with ID ${id} not found.`
-    );
-    if (orderDetailsCheck !== true) {
-      return orderDetailsCheck;
+    // Check if the ID is valid
+    const orderDetailCheck = await checkExists(shopTables.orderDetails, id, `Order detail with ID ${id} not found.`);
+    if (orderDetailCheck !== true) {
+      return orderDetailCheck;
     }
 
-    const recordId = new RecordId(shopTables.orderDetails, id);
-
     // Delete the order detail
-    await db.delete(recordId);
+    await db.delete(new RecordId(shopTables.orderDetails, id));
 
-    return NextResponse.json({ message: 'Order detail deleted successfully' }, { status: 200 });
+    return NextResponse.json({ message: 'Order detail deleted successfully.' }, { status: 200 });
   } catch (error: unknown) {
     return NextResponse.json(
-      {
-        error: {
-          code: 'internal_server_error',
-          message: 'Failed to delete order detail',
-          details: (error as Error).message,
-        },
-      },
+      { error: 'Failed to delete order detail', details: (error as Error).message },
       {
         status: 500,
       }
