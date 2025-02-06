@@ -91,7 +91,7 @@ DEFINE FIELD amount ON ShopPayment TYPE number ASSERT $value != NONE;
 DEFINE FIELD transaction_id ON ShopPayment TYPE string ASSERT $value != NONE;
 DEFINE FIELD created_at ON ShopPayment TYPE datetime;
 DEFINE FIELD updated_at ON ShopPayment TYPE datetime VALUE time::now();
-DEFINE FIELD metadata ON ShopPayment TYPE object;
+DEFINE FIELD metadata ON ShopPayment FLEXIBLE TYPE object;
 
 DEFINE INDEX idx_ShopPayment_id ON ShopPayment FIELDS id UNIQUE;
 DEFINE INDEX idx_ShopPayment_order_id ON ShopPayment FIELDS order_id UNIQUE;
@@ -115,7 +115,7 @@ DEFINE FIELD is_active ON ShopProduct TYPE bool ASSERT $value != NONE;
 DEFINE FIELD product_type ON ShopProduct TYPE string ASSERT $value IN ["physical", "digital"];
 DEFINE FIELD coverImage ON ShopProduct TYPE string;
 DEFINE FIELD files ON ShopProduct TYPE array<string>;
-DEFINE FIELD metadata ON ShopProduct TYPE object;
+DEFINE FIELD metadata ON ShopProduct FLEXIBLE TYPE object;
 DEFINE FIELD created_at ON ShopProduct TYPE datetime;
 DEFINE FIELD updated_at ON ShopProduct TYPE datetime VALUE time::now();
 
