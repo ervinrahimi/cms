@@ -155,7 +155,7 @@ DEFINE TABLE ShopCart SCHEMAFULL
 
 DEFINE FIELD id ON ShopCart TYPE string ASSERT $value != NONE;
 DEFINE FIELD user_id ON ShopCart TYPE record<User> ASSERT $value != NONE;
-DEFINE FIELD items ON ShopCart TYPE array<object> ASSERT $value != NONE;
+DEFINE FIELD items ON ShopCart FLEXIBLE TYPE array<object> ASSERT $value != NONE;
 DEFINE FIELD created_at ON ShopCart TYPE datetime;
 DEFINE FIELD updated_at ON ShopCart TYPE datetime VALUE time::now();
 
