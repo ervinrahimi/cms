@@ -10,6 +10,7 @@ const isAdminRoute = createRouteMatcher([
 const isPublicRoute = createRouteMatcher([
   '/',
   '/api(.*)',
+  '/chat(.*)',
   '/auth/sign-in(.*)',
   '/auth/sign-up(.*)'
 ])
