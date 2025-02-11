@@ -1,19 +1,8 @@
-"use client";
+"use client"
 
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useCallback,
-  useState,
-  FormEvent,
-  ReactNode,
-} from "react";
-import { Surreal } from "surrealdb";
-import { useMutation, QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import React, { useState, useEffect, FormEvent } from "react";
+import sdb from "@/db/surrealdb"; // استفاده از کانکشن موجود
 
-// --- انواع و اینترفیس‌ها ---
 interface Message {
   id?: string;
   sender?: string;
@@ -21,127 +10,48 @@ interface Message {
   created_at?: string;
 }
 
-interface SurrealProviderProps {
-  children: ReactNode;
-  endpoint: string;
-  autoConnect?: boolean;
-}
-
-interface SurrealProviderState {
-  client: Surreal;
-  isConnecting: boolean;
-  isSuccess: boolean;
-  isError: boolean;
-  error: unknown;
-  connect: () => Promise<true>;
-  close: () => Promise<true>;
-}
-
-// --- متغیرهای محیطی ---
-const DB_URL = "wss://dynamic-gull-06ad1bhg19u4vfrl4pqnil6o08.aws-use1.surreal.cloud";
-const DB_USER = "root";
-const DB_PASS = "root";
-const DB_NAMESPACE = "test";
-const DB_NAME = "chat";
-
-// --- ایجاد Context برای اتصال به SurrealDB ---
-const SurrealContext = createContext<SurrealProviderState | undefined>(undefined);
-
-function SurrealProvider({ children, endpoint, autoConnect = true }: SurrealProviderProps) {
-  const [surrealInstance] = useState<Surreal>(() => new Surreal());
-
-  // از react-query برای مدیریت وضعیت اتصال استفاده می‌کنیم
-  const {
-    mutateAsync: connectMutation,
-    isPending, // یا isLoading
-    isSuccess,
-    isError,
-    error,
-    reset,
-  } = useMutation({
-    mutationFn: () => surrealInstance.connect(endpoint),
-  });
-
-  const connect = useCallback(() => connectMutation(), [connectMutation]);
-  const close = useCallback(() => surrealInstance.close(), [surrealInstance]);
-
-  useEffect(() => {
-    if (autoConnect) {
-      connect();
-    }
-    return () => {
-      reset();
-      surrealInstance.close();
-    };
-  }, [autoConnect, connect, reset, surrealInstance]);
-
-  const value = useMemo<SurrealProviderState>(
-    () => ({
-      client: surrealInstance,
-      isConnecting: isPending,
-      isSuccess,
-      isError,
-      error,
-      connect,
-      close,
-    }),
-    [surrealInstance, isPending, isSuccess, isError, error, connect, close]
-  );
-
-  return <SurrealContext.Provider value={value}>{children}</SurrealContext.Provider>;
-}
-
-function useSurreal() {
-  const context = useContext(SurrealContext);
-  if (!context) {
-    throw new Error("useSurreal must be used within a SurrealProvider");
-  }
-  return context;
-}
-
 // --- کامپوننت Chat ---
 function Chat() {
-  const { client, isConnecting, isSuccess, isError, error } = useSurreal();
-
   const [isAuthDone, setIsAuthDone] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [senderName, setSenderName] = useState("UserA");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [dbClient, setDbClient] = useState<any>(null); // ذخیره کردن کانکشن SurrealDB
 
-  // پس از اتصال موفق، وارد شدن (signin) و انتخاب namespace و database
   useEffect(() => {
-    const doAuth = async () => {
+    // متصل شدن به SurrealDB و انجام Auth
+    const connectToDB = async () => {
       try {
-        await client.signin({ username: DB_USER, password: DB_PASS });
-        await client.use({ namespace: DB_NAMESPACE, database: DB_NAME });
+        const db = await sdb(); // استفاده از تابع sdb برای اتصال
+        setDbClient(db);
         setIsAuthDone(true);
       } catch (err) {
-        console.error("Signin error:", err);
+        console.error("Error connecting to SurrealDB:", err);
       }
     };
-    if (isSuccess && !isAuthDone) {
-      doAuth();
-    }
-  }, [isSuccess, isAuthDone, client]);
 
-  // بعد از auth شدن، داده‌های اولیه را می‌خوانیم و Live Query را فعال می‌کنیم
+    connectToDB();
+  }, []);
+
   useEffect(() => {
-    if (!isAuthDone) return;
+    if (!isAuthDone || !dbClient) return;
 
     let queryId: string | null = null;
 
     async function setupLiveQuery() {
       try {
         // پیام‌های اولیه
-        const res = await client.query("SELECT * FROM messages ORDER BY created_at ASC");
+        const res = await dbClient.query("SELECT * FROM messages ORDER BY created_at ASC");
         const initialMessages = res?.[0] || [];
         setMessages(initialMessages);
 
         // ایجاد Live Query
-        queryId = await client.live("messages");
+        queryId = await dbClient.live("messages");
 
         // Subscribe به Live Query
-        client.subscribeLive(queryId, (action: string, result: any) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        dbClient.subscribeLive(queryId, (action: string, result: any) => {
           if (action === "CLOSE") return;
           console.log("Live Action:", action, "Result:", result);
 
@@ -165,19 +75,19 @@ function Chat() {
     // Cleanup: بستن لایو کوئری در زمان unmount
     return () => {
       if (queryId) {
-        client.kill(queryId).catch((err: unknown) => {
+        dbClient.kill(queryId).catch((err: unknown) => {
           console.error("Error killing live query:", err);
         });
       }
     };
-  }, [isAuthDone, client]);
+  }, [isAuthDone, dbClient]);
 
   // تابع ارسال پیام
   const sendMessage = async (e: FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim()) return;
     try {
-      await client.create("messages", {
+      await dbClient.create("messages", {
         sender: senderName,
         content: inputValue,
         created_at: new Date().toISOString(),
@@ -188,8 +98,7 @@ function Chat() {
     }
   };
 
-  if (isConnecting) return <p>Connecting to SurrealDB...</p>;
-  if (isError) return <p>Connection failed: {String(error)}</p>;
+  if (!isAuthDone) return <p>Connecting to SurrealDB...</p>;
 
   return (
     <div className="chat-container">
@@ -226,7 +135,6 @@ function Chat() {
         <button type="submit">Send</button>
       </form>
 
-      {/* استایل خام در همین فایل */}
       <style jsx>{`
         .chat-container {
           width: 60%;
@@ -290,15 +198,11 @@ function Chat() {
   );
 }
 
-// --- خروجی اصلی صفحه + QueryClientProvider ---
-const queryClient = new QueryClient();
-
+// --- خروجی اصلی صفحه ---
 export default function Page() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <SurrealProvider endpoint={DB_URL} autoConnect>
-        <Chat />
-      </SurrealProvider>
-    </QueryClientProvider>
+    <div>
+      <Chat />
+    </div>
   );
 }
