@@ -8,6 +8,7 @@ export default function Home() {
         <span>M</span>
         <span>S</span>
       </div>
+     
     </div>
   )
 }
