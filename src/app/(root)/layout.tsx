@@ -14,14 +14,14 @@ export default function RootLayout({
 }>) {
   return (
     <>
-      <div className='clerk-auth-buttons'>
+      {/* <div className='clerk-auth-buttons'>
         <SignedOut>
           <SignInButton />
         </SignedOut>
         <SignedIn>
           <UserButton />
         </SignedIn>
-      </div>
+      </div> */}
       {children}
     </>
   )
