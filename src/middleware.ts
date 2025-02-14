@@ -9,7 +9,6 @@ const isAdminRoute = createRouteMatcher([
 // Public routes
 const isPublicRoute = createRouteMatcher([
   '/',
-  '/admin(.*)',
   '/api(.*)',
   '/chat(.*)',
   '/auth/sign-in(.*)',
