@@ -19,7 +19,7 @@ export default function RootLayout({
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbLink href="#">Dashboard</BreadcrumbLink>
+                <BreadcrumbLink href="/admin/chat/dashboard">Dashboard</BreadcrumbLink>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -32,6 +32,4 @@ export default function RootLayout({
   )
 }
 
-export const metadata = {
-  generator: 'v0.dev'
-};
+
