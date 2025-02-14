@@ -1,5 +1,5 @@
 import { Geist, Geist_Mono } from 'next/font/google'
-import { ClerkProvider } from '@clerk/nextjs'
+// import { ClerkProvider } from '@clerk/nextjs'
 import '@/styles/globals.css'
 
 const geistSans = Geist({
@@ -18,12 +18,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <ClerkProvider>
+    // <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
         <body className={`${geistSans.variable} ${geistMono.variable}`}>
           {children}
         </body>
       </html>
-    </ClerkProvider>
+    // </ClerkProvider>
   )
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import type * as React from "react"
-import { LayoutDashboard, MessageSquare, Users, UserCog } from "lucide-react"
+import { LayoutDashboard, MessageSquare, Users } from "lucide-react"
 import { NavMain } from "./nav-main"
 import { NavUser } from "./nav-user"
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } from "@/components/ui/sidebar"
@@ -21,19 +21,14 @@ const data = {
     },
     {
       title: "Chat Room Management",
-      url: "/chat-rooms",
+      url: "/admin/chat/chats",
       icon: MessageSquare,
     },
     {
       title: "User Management",
-      url: "/users",
+      url: "/admin/chat/users",
       icon: Users,
-    },
-    {
-      title: "Admin Profile",
-      url: "/admin-profile",
-      icon: UserCog,
-    },
+    }
   ],
 }
 
