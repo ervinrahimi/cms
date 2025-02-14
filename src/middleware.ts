@@ -1,10 +1,10 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 
-/* // Admin routes
+// Admin routes
 const isAdminRoute = createRouteMatcher([
   '/admin(.*)'
-]) */
+]) 
 
 // Public routes
 const isPublicRoute = createRouteMatcher([
@@ -13,15 +13,15 @@ const isPublicRoute = createRouteMatcher([
   '/chat(.*)',
   '/auth/sign-in(.*)',
   '/auth/sign-up(.*)',
-   '/admin(.*)'
+
 ])
 
 export default clerkMiddleware(async (auth, req) => {
   // Redirect non-admin users from admin routes
- /*  if (isAdminRoute(req) && (await auth()).sessionClaims?.metadata?.role !== 'admin') {
+  if (isAdminRoute(req) && (await auth()).sessionClaims?.metadata?.role !== 'admin') {
     const url = new URL('/', req.url)
     return NextResponse.redirect(url)
-  } */
+  } 
 
   // Protect all routes except public routes
   if (!isPublicRoute(req)) {

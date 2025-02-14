@@ -1,3 +1,4 @@
+import { ChatWidget } from '@/components/chat/user/chat-widget'
 import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 import type { Metadata } from 'next'
 
@@ -13,14 +14,14 @@ export default function RootLayout({
 }>) {
   return (
     <>
-     {/*  <div className='clerk-auth-buttons'>
+      <div className='clerk-auth-buttons'>
         <SignedOut>
           <SignInButton />
         </SignedOut>
         <SignedIn>
           <UserButton />
         </SignedIn>
-      </div> */}
+      </div>
       {children}
     </>
   )
