@@ -1,3 +1,4 @@
+import { ChatWidget } from '@/components/chat/user/chat-widget'
 import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 import type { Metadata } from 'next'
 
