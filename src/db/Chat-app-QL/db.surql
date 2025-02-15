@@ -6,7 +6,7 @@ The table also tracks the creation timestamp. */
 DEFINE TABLE Customer SCHEMAFULL
       PERMISSIONS FOR select, create, update, delete WHERE id = $auth.id;
 
-DEFINE FIELD id ON Customer TYPE string ASSERT string::is::uuid($value);
+DEFINE FIELD id ON Customer TYPE string ASSERT $value != NONE;
 DEFINE FIELD clerk_user_id ON Customer TYPE string;
 DEFINE FIELD name ON Customer TYPE string;
 DEFINE FIELD email ON Customer TYPE string ASSERT string::is::email($value);
@@ -23,7 +23,7 @@ The table also tracks the status, start, and end timestamps. */
 DEFINE TABLE Chat SCHEMAFULL
     PERMISSIONS FOR select, create, update, delete WHERE id = $auth.id;
 
-DEFINE FIELD id ON Chat TYPE string ASSERT string::is::uuid($value);
+DEFINE FIELD id ON Chat TYPE string ASSERT $value != NONE;
 DEFINE FIELD customer_id ON Chat TYPE record<Customer>;
 DEFINE FIELD status ON Chat TYPE string ASSERT $value IN ["active", "viewed", "closed"];
 DEFINE FIELD started_at ON Chat TYPE datetime;
@@ -40,7 +40,7 @@ The table also tracks the sender ID, content, and sent timestamp. */
 DEFINE TABLE Message SCHEMAFULL
     PERMISSIONS FOR select, create, update, delete WHERE id = $auth.id;
 
-DEFINE FIELD id ON Message TYPE string ASSERT string::is::uuid($value);
+DEFINE FIELD id ON Message TYPE string ASSERT $value != NONE;
 DEFINE FIELD chat_id ON Message TYPE record<Chat>;
 DEFINE FIELD sender_id ON Message TYPE string;
 DEFINE FIELD content ON Message TYPE string;
@@ -58,7 +58,7 @@ The table also tracks the rating, comment, and submitted timestamp. */
 DEFINE TABLE Feedback SCHEMAFULL
     PERMISSIONS FOR select, create, update, delete WHERE id = $auth.id;
 
-DEFINE FIELD id ON Feedback TYPE string ASSERT string::is::uuid($value);
+DEFINE FIELD id ON Feedback TYPE string ASSERT $value != NONE;
 DEFINE FIELD chat_id ON Feedback TYPE record<Chat>;
 DEFINE FIELD rating ON Feedback TYPE int ASSERT $value >= 1 AND $value <= 5;
 DEFINE FIELD comment ON Feedback TYPE string;
