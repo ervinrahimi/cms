@@ -1,65 +1,68 @@
-/* -- Customers Table --
+/* -- Customer Table --
 
 This table stores customer information. Each customer has a unique ID and a clerk user ID.
 The table also tracks the creation timestamp. */
 
-DEFINE TABLE customers SCHEMAFULL
+DEFINE TABLE Customer SCHEMAFULL
       PERMISSIONS FOR select, create, update, delete WHERE id = $auth.id;
 
-DEFINE FIELD customer_id ON customers TYPE string ASSERT string::is::uuid($value);
-DEFINE FIELD clerk_user_id ON customers TYPE string;
-DEFINE FIELD name ON customers TYPE string;
-DEFINE FIELD email ON customers TYPE string ASSERT string::is::email($value);
-DEFINE FIELD created_at ON customers TYPE datetime;
+DEFINE FIELD id ON Customer TYPE string ASSERT string::is::uuid($value);
+DEFINE FIELD clerk_user_id ON Customer TYPE string;
+DEFINE FIELD name ON Customer TYPE string;
+DEFINE FIELD email ON Customer TYPE string ASSERT string::is::email($value);
+DEFINE FIELD created_at ON Customer TYPE datetime;
 
-/* -- Chats Table --
+DEFINE INDEX idx_Customer_id ON Customer FIELDS id UNIQUE;
+DEFINE INDEX idx_Customer_clerk_user_id ON Customer FIELDS clerk_user_id UNIQUE;
+
+/* -- Chat Table --
 
 This table stores chat information. Each chat has a unique ID and is linked to a customer.
 The table also tracks the status, start, and end timestamps. */
 
-DEFINE TABLE chats SCHEMAFULL
+DEFINE TABLE Chat SCHEMAFULL
     PERMISSIONS FOR select, create, update, delete WHERE id = $auth.id;
 
-DEFINE FIELD chat_id ON chats TYPE string ASSERT string::is::uuid($value);
-DEFINE FIELD customer_id ON chats TYPE record<customers>;
-DEFINE FIELD status ON chats TYPE string ASSERT $value IN ["active", "viewed", "closed"];
-DEFINE FIELD started_at ON chats TYPE datetime;
-DEFINE FIELD ended_at ON chats TYPE datetime;
+DEFINE FIELD id ON Chat TYPE string ASSERT string::is::uuid($value);
+DEFINE FIELD customer_id ON Chat TYPE record<Customer>;
+DEFINE FIELD status ON Chat TYPE string ASSERT $value IN ["active", "viewed", "closed"];
+DEFINE FIELD started_at ON Chat TYPE datetime;
+DEFINE FIELD ended_at ON Chat TYPE datetime;
 
-DEFINE INDEX idx_chats_chat_id ON chats FIELDS chat_id UNIQUE;
-DEFINE INDEX idx_chats_customer_id ON chats FIELDS customer_id UNIQUE;
+DEFINE INDEX idx_Chat_id ON Chat FIELDS id UNIQUE;
+DEFINE INDEX idx_Chat_customer_id ON Chat FIELDS customer_id UNIQUE;
 
-/* -- Messages Table --
+/* -- Message Table --
 
 This table stores message information. Each message has a unique ID and is linked to a chat.
 The table also tracks the sender ID, content, and sent timestamp. */
 
-DEFINE TABLE messages SCHEMAFULL
+DEFINE TABLE Message SCHEMAFULL
     PERMISSIONS FOR select, create, update, delete WHERE id = $auth.id;
 
-DEFINE FIELD message_id ON messages TYPE string ASSERT string::is::uuid($value);
-DEFINE FIELD chat_id ON messages TYPE record<chats>;
-DEFINE FIELD sender_id ON messages TYPE string;
-DEFINE FIELD content ON messages TYPE string;
-DEFINE FIELD sent_at ON messages TYPE datetime;
+DEFINE FIELD id ON Message TYPE string ASSERT string::is::uuid($value);
+DEFINE FIELD chat_id ON Message TYPE record<Chat>;
+DEFINE FIELD sender_id ON Message TYPE string;
+DEFINE FIELD content ON Message TYPE string;
+DEFINE FIELD sent_at ON Message TYPE datetime;
 
-DEFINE INDEX idx_messages_message_id ON messages FIELDS message_id UNIQUE;
-DEFINE INDEX idx_messages_chat_id ON messages FIELDS chat_id UNIQUE;
-DEFINE INDEX idx_messages_sender_id ON messages FIELDS sender_id UNIQUE;
+DEFINE INDEX idx_Message_id ON Message FIELDS id UNIQUE;
+DEFINE INDEX idx_Message_chat_id ON Message FIELDS chat_id UNIQUE;
+DEFINE INDEX idx_Message_sender_id ON Message FIELDS sender_id UNIQUE;
 
 /* -- Feedback Table --
 
 This table stores feedback information. Each feedback has a unique ID and is linked to a chat.
 The table also tracks the rating, comment, and submitted timestamp. */
 
-DEFINE TABLE feedback SCHEMAFULL
+DEFINE TABLE Feedback SCHEMAFULL
     PERMISSIONS FOR select, create, update, delete WHERE id = $auth.id;
 
-DEFINE FIELD feedback_id ON feedback TYPE string ASSERT string::is::uuid($value);
-DEFINE FIELD chat_id ON feedback TYPE record<chats>;
-DEFINE FIELD rating ON feedback TYPE int ASSERT $value >= 1 AND $value <= 5;
-DEFINE FIELD comment ON feedback TYPE string;
-DEFINE FIELD submitted_at ON feedback TYPE datetime;
+DEFINE FIELD id ON Feedback TYPE string ASSERT string::is::uuid($value);
+DEFINE FIELD chat_id ON Feedback TYPE record<Chat>;
+DEFINE FIELD rating ON Feedback TYPE int ASSERT $value >= 1 AND $value <= 5;
+DEFINE FIELD comment ON Feedback TYPE string;
+DEFINE FIELD submitted_at ON Feedback TYPE datetime;
 
-DEFINE INDEX idx_feedback_feedback_id ON feedback FIELDS feedback_id UNIQUE;
-DEFINE INDEX idx_feedback_chat_id ON feedback FIELDS chat_id UNIQUE;
+DEFINE INDEX idx_Feedback_id ON Feedback FIELDS id UNIQUE;
+DEFINE INDEX idx_Feedback_chat_id ON Feedback FIELDS chat_id UNIQUE;
