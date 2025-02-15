@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 // Admin routes
 const isAdminRoute = createRouteMatcher([
   '/admin(.*)'
-])
+]) 
 
 // Public routes
 const isPublicRoute = createRouteMatcher([
@@ -12,7 +12,8 @@ const isPublicRoute = createRouteMatcher([
   '/api(.*)',
   '/chat(.*)',
   '/auth/sign-in(.*)',
-  '/auth/sign-up(.*)'
+  '/auth/sign-up(.*)',
+
 ])
 
 export default clerkMiddleware(async (auth, req) => {
@@ -20,7 +21,7 @@ export default clerkMiddleware(async (auth, req) => {
   if (isAdminRoute(req) && (await auth()).sessionClaims?.metadata?.role !== 'admin') {
     const url = new URL('/', req.url)
     return NextResponse.redirect(url)
-  }
+  } 
 
   // Protect all routes except public routes
   if (!isPublicRoute(req)) {
