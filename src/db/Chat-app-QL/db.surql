@@ -3,17 +3,34 @@
 This table stores customer information. Each customer has a unique ID and a clerk user ID.
 The table also tracks the creation timestamp. */
 
-DEFINE TABLE Customer SCHEMAFULL
+DEFINE TABLE ChatUser SCHEMAFULL
       PERMISSIONS FOR select, create, update, delete WHERE id = $auth.id;
 
-DEFINE FIELD id ON Customer TYPE string ASSERT $value != NONE;
-DEFINE FIELD clerk_user_id ON Customer TYPE string;
-DEFINE FIELD name ON Customer TYPE string;
-DEFINE FIELD email ON Customer TYPE string ASSERT string::is::email($value);
-DEFINE FIELD created_at ON Customer TYPE datetime;
+DEFINE FIELD id ON TABLE ChatUser TYPE string ASSERT $value != NONE;
+DEFINE FIELD clerk_user_id ON TABLE ChatUser TYPE string ASSERT $value != NONE;
+DEFINE FIELD name ON TABLE ChatUser TYPE string;
+DEFINE FIELD email ON TABLE ChatUser TYPE string ASSERT string::is::email($value);
+DEFINE FIELD created_at ON TABLE ChatUser TYPE datetime;
 
-DEFINE INDEX idx_Customer_id ON Customer FIELDS id UNIQUE;
-DEFINE INDEX idx_Customer_clerk_user_id ON Customer FIELDS clerk_user_id UNIQUE;
+DEFINE INDEX idx_ChatUser_id ON TABLE ChatUser FIELDS id UNIQUE;
+
+/* -- Admin Table --
+
+This table stores admin information. Each chat has a unique ID and is linked to a customer.
+The table also tracks the status, start, and end timestamps. */
+
+DEFINE TABLE ChatAdmin SCHEMAFULL
+    PERMISSIONS FOR select, create, update, delete WHERE id = $auth.id;
+
+DEFINE FIELD id ON TABLE ChatAdmin TYPE string ASSERT $value != NONE;
+DEFINE FIELD clerk_admin_id ON TABLE ChatAdmin TYPE string ASSERT $value != NONE;
+DEFINE FIELD firstname ON TABLE ChatAdmin TYPE string;
+DEFINE FIELD lastname ON TABLE ChatAdmin TYPE string;
+DEFINE FIELD email ON TABLE ChatAdmin TYPE string ASSERT string::is::email($value);
+DEFINE FIELD created_at ON TABLE ChatAdmin TYPE datetime;
+DEFINE FIELD updated_at ON TABLE ChatAdmin TYPE datetime VALUE time::now();
+
+DEFINE INDEX idx_ChatAdmin_id ON TABLE ChatAdmin FIELDS id UNIQUE;
 
 /* -- Chat Table --
 
@@ -23,14 +40,16 @@ The table also tracks the status, start, and end timestamps. */
 DEFINE TABLE Chat SCHEMAFULL
     PERMISSIONS FOR select, create, update, delete WHERE id = $auth.id;
 
-DEFINE FIELD id ON Chat TYPE string ASSERT $value != NONE;
-DEFINE FIELD customer_id ON Chat TYPE record<Customer>;
-DEFINE FIELD status ON Chat TYPE string ASSERT $value IN ["active", "viewed", "closed"];
-DEFINE FIELD started_at ON Chat TYPE datetime;
-DEFINE FIELD ended_at ON Chat TYPE datetime;
+DEFINE FIELD id ON TABLE Chat TYPE string ASSERT $value != NONE;
+DEFINE FIELD customer_id ON TABLE Chat TYPE record<ChatUser>;
+DEFINE FIELD admin_id ON TABLE Chat TYPE record<ChatAdmin>;
+DEFINE FIELD status ON TABLE Chat TYPE string ASSERT $value IN ["pending", "activated", "viewed", "closed"];
+DEFINE FIELD started_at ON TABLE Chat TYPE datetime;
+DEFINE FIELD ended_at ON TABLE Chat TYPE option<datetime>;
+DEFINE FIELD created_at ON TABLE Chat TYPE datetime;
+DEFINE FIELD updated_at ON TABLE Chat TYPE datetime VALUE time::now();
 
 DEFINE INDEX idx_Chat_id ON Chat FIELDS id UNIQUE;
-DEFINE INDEX idx_Chat_customer_id ON Chat FIELDS customer_id UNIQUE;
 
 /* -- Message Table --
 
@@ -40,15 +59,14 @@ The table also tracks the sender ID, content, and sent timestamp. */
 DEFINE TABLE Message SCHEMAFULL
     PERMISSIONS FOR select, create, update, delete WHERE id = $auth.id;
 
-DEFINE FIELD id ON Message TYPE string ASSERT $value != NONE;
-DEFINE FIELD chat_id ON Message TYPE record<Chat>;
-DEFINE FIELD sender_id ON Message TYPE string;
-DEFINE FIELD content ON Message TYPE string;
-DEFINE FIELD sent_at ON Message TYPE datetime;
+DEFINE FIELD id ON TABLE Message TYPE string ASSERT $value != NONE;
+DEFINE FIELD chat_id ON TABLE Message TYPE record<Chat>;
+DEFINE FIELD content ON TABLE Message TYPE string;
+DEFINE FIELD sender_id ON TABLE Message TYPE record;
+DEFINE FIELD sent_at ON TABLE Message TYPE datetime;
+DEFINE FIELD created_at ON TABLE Message TYPE datetime VALUE time::now();
 
-DEFINE INDEX idx_Message_id ON Message FIELDS id UNIQUE;
-DEFINE INDEX idx_Message_chat_id ON Message FIELDS chat_id UNIQUE;
-DEFINE INDEX idx_Message_sender_id ON Message FIELDS sender_id UNIQUE;
+DEFINE INDEX idx_Message_id ON TABLE Message FIELDS id UNIQUE;
 
 /* -- Feedback Table --
 
@@ -58,11 +76,13 @@ The table also tracks the rating, comment, and submitted timestamp. */
 DEFINE TABLE Feedback SCHEMAFULL
     PERMISSIONS FOR select, create, update, delete WHERE id = $auth.id;
 
-DEFINE FIELD id ON Feedback TYPE string ASSERT $value != NONE;
-DEFINE FIELD chat_id ON Feedback TYPE record<Chat>;
-DEFINE FIELD rating ON Feedback TYPE int ASSERT $value >= 1 AND $value <= 5;
-DEFINE FIELD comment ON Feedback TYPE string;
-DEFINE FIELD submitted_at ON Feedback TYPE datetime;
+DEFINE FIELD id ON TABLE Feedback TYPE string ASSERT $value != NONE;
+DEFINE FIELD chat_id ON TABLE Feedback TYPE record<Chat>;
+DEFINE FIELD rating ON TABLE Feedback TYPE int ASSERT $value >= 1 AND $value <= 5;
+DEFINE FIELD comment ON TABLE Feedback TYPE string;
+DEFINE FIELD submitted_at ON TABLE Feedback TYPE datetime;
+DEFINE FIELD created_at ON TABLE Feedback TYPE datetime;
+DEFINE FIELD updated_at ON TABLE Feedback TYPE datetime VALUE time::now();
 
-DEFINE INDEX idx_Feedback_id ON Feedback FIELDS id UNIQUE;
-DEFINE INDEX idx_Feedback_chat_id ON Feedback FIELDS chat_id UNIQUE;
+DEFINE INDEX idx_Feedback_id ON TABLE Feedback FIELDS id UNIQUE;
+DEFINE INDEX idx_Feedback_chat_id ON TABLE Feedback FIELDS chat_id UNIQUE;
