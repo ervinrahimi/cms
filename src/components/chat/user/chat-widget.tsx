@@ -9,39 +9,38 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { MessageCircle, X, Send, Users } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
+import sdb from "@/db/surrealdb"
 
 interface Message {
-  id: number
+  id: string
   content: string
-  sender: "user" | "admin"
-  timestamp: Date
+  sender_id: string
+  created_at: string
 }
-
-const activeAdmins = [
-  {
-    name: "Sofia D",
-    image: "https://i.pinimg.com/736x/6e/8b/67/6e8b67bee54342c802046c1dae07f718.jpg",
-  },
-  { name: "John M", image: "https://i.pinimg.com/736x/5e/2b/b7/5e2bb708503711ecf7bea10ebb6ee17a.jpg" },
-  { name: "Emma K", image: "https://i.pinimg.com/736x/e5/cd/a4/e5cda443d5be7b58ee938fa459603b26.jpg" },
-  { name: "Mike R", image: "https://i.pinimg.com/736x/86/0d/07/860d07f2e1e10f37891640d08c035f31.jpg" },
-]
 
 export function ChatWidget() {
   const [isOpen, setIsOpen] = React.useState(false)
   const [message, setMessage] = React.useState("")
   const [messages, setMessages] = React.useState<Message[]>([
     {
-      id: 1,
-      content: "Hi, how can I help you today?",
-      sender: "admin",
-      timestamp: new Date(),
+      id: "admin-msg-1",
+      content: "Hello! How can I assist you today?",
+      sender_id: "admin",
+      created_at: new Date().toISOString(),
     },
   ])
   const [showMainAdmin, setShowMainAdmin] = React.useState(false)
   const [showUserInfoDialog, setShowUserInfoDialog] = React.useState(true)
   const [userName, setUserName] = React.useState("")
   const [userEmail, setUserEmail] = React.useState("")
+  const [dbClient, setDbClient] = React.useState<any>(null)
+  const [customerId, setCustomerId] = React.useState<string | null>(null)
+  const [chatId, setChatId] = React.useState<string | null>(null)
+  const [chatStatus, setChatStatus] = React.useState("viewed")
+  // ذخیره رکورد کامل چت برای دریافت admin_id
+  const [chat, setChat] = React.useState<any>(null)
+  // state جدید برای ذخیره ادمین‌های واقعی از دیتابیس
+  const [admins, setAdmins] = React.useState<any[]>([])
 
   const messagesEndRef = React.useRef<HTMLDivElement>(null)
 
@@ -55,107 +54,338 @@ export function ChatWidget() {
     }
   }, [isOpen, showUserInfoDialog, scrollToBottom])
 
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!message.trim()) return
+  React.useEffect(() => {
+    const connectToDB = async () => {
+      try {
+        const db = await sdb()
+        setDbClient(db)
+      } catch (err) {
+        console.error("Error connecting to SurrealDB:", err)
+      }
+    }
+    connectToDB()
+  }, [])
 
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      {
-        id: prevMessages.length + 1,
+  // اشتراک زنده برای پیام‌ها
+  React.useEffect(() => {
+    if (!dbClient || !chatId) return
+
+    let queryId: string | null = null
+
+    const setupLiveQuery = async () => {
+      try {
+        const res = await dbClient.query(
+          `SELECT * FROM Message WHERE chat_id = '${chatId}' ORDER BY created_at ASC`
+        )
+        const initialMessages = res?.[0] || []
+        setMessages((prev) => [...prev, ...initialMessages])
+
+        queryId = await dbClient.live("Message")
+        dbClient.subscribeLive(queryId, (action: string, result: any) => {
+          if (action === "CLOSE") return
+          if (action === "CREATE") {
+            setMessages((prev) => [...prev, result])
+          } else if (action === "UPDATE") {
+            setMessages((prev) =>
+              prev.map((msg) => (msg.id === result.id ? result : msg))
+            )
+          } else if (action === "DELETE") {
+            setMessages((prev) => prev.filter((msg) => msg.id !== result.id))
+          }
+        })
+      } catch (err) {
+        console.error("Error setting up live query:", err)
+      }
+    }
+
+    setupLiveQuery()
+
+    return () => {
+      if (queryId) {
+        dbClient
+          .kill(queryId)
+          .catch((err: unknown) =>
+            console.error("Error killing live query:", err)
+          )
+      }
+    }
+  }, [dbClient, chatId])
+
+  // اشتراک زنده برای چت جهت دریافت تغییرات (هم وضعیت و هم admin_id)
+  React.useEffect(() => {
+    if (!dbClient || !chatId) return
+
+    let chatQueryId: string | null = null
+
+    const subscribeChatStatus = async () => {
+      try {
+        chatQueryId = await dbClient.live("Chat")
+        dbClient.subscribeLive(chatQueryId, (action: string, result: any) => {
+          if (action === "CLOSE") return
+          if (String(result.id) === String(chatId)) {
+            setChat(result)
+            setChatStatus(result.status)
+            setShowMainAdmin(result.status === "active")
+          }
+        })
+      } catch (err) {
+        console.error("Error subscribing to chat live updates:", err)
+      }
+    }
+
+    subscribeChatStatus()
+
+    return () => {
+      if (chatQueryId) {
+        dbClient
+          .kill(chatQueryId)
+          .catch((err: unknown) =>
+            console.error("Error killing chat live query:", err)
+          )
+      }
+    }
+  }, [dbClient, chatId])
+
+  // اشتراک زنده برای ادمین‌ها
+  React.useEffect(() => {
+    if (!dbClient) return
+
+    let adminQueryId: string | null = null
+
+    const setupLiveAdmins = async () => {
+      try {
+        // دریافت اولیه لیست ادمین‌ها
+        const res = await dbClient.query(`SELECT * FROM ChatAdmin`)
+        const initialAdmins = res?.[0] || []
+        setAdmins(initialAdmins)
+
+        adminQueryId = await dbClient.live("ChatAdmin")
+        dbClient.subscribeLive(adminQueryId, (action: string, result: any) => {
+          if (action === "CLOSE") return
+          if (action === "CREATE") {
+            setAdmins((prev) => [...prev, result])
+          } else if (action === "UPDATE") {
+            setAdmins((prev) =>
+              prev.map((admin) => (admin.id === result.id ? result : admin))
+            )
+          } else if (action === "DELETE") {
+            setAdmins((prev) =>
+              prev.filter((admin) => admin.id !== result.id)
+            )
+          }
+        })
+      } catch (err) {
+        console.error("Error setting up live admins:", err)
+      }
+    }
+
+    setupLiveAdmins()
+
+    return () => {
+      if (adminQueryId) {
+        dbClient
+          .kill(adminQueryId)
+          .catch((err: unknown) =>
+            console.error("Error killing live admins query:", err)
+          )
+      }
+    }
+  }, [dbClient])
+
+  // تعیین ادمین فعال با توجه به فیلد admin_id از رکورد چت
+  const activeAdmin = chat?.admin_id
+    ? admins.find(
+        (admin) => String(admin.id) === String(chat.admin_id)
+      )
+    : null
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!message.trim() || !customerId || !chatId) return
+
+    try {
+      await dbClient.create("Message", {
+        chat_id: chatId,
+        sender_id: customerId,
         content: message,
-        sender: "user",
-        timestamp: new Date(),
-      },
-    ])
-    setMessage("")
-    setTimeout(scrollToBottom, 0)
-  }
-
-  const handleUserInfoSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (userEmail) {
-      setShowUserInfoDialog(false)
+        sent_at: new Date(),
+      })
+      setMessage("")
+      setTimeout(scrollToBottom, 0)
+    } catch (err) {
+      console.error("Error sending message:", err)
     }
   }
 
-  const renderChatInterface = () => (
-    <Card className="w-[320px] h-[480px] flex flex-col">
-      <CardHeader className="space-y-1.5 p-4">
-        <div className="flex justify-between items-center">
-          {showMainAdmin ? (
-            <div className="flex items-center gap-2">
-              <Avatar>
-                <AvatarImage src={activeAdmins[0].image} alt="Sofia" />
-                <AvatarFallback>SD</AvatarFallback>
-              </Avatar>
-              <div>
-                <h3 className="font-semibold">Sofia Davis</h3>
-                <p className="text-xs text-muted-foreground">m@example.com</p>
+  const handleUserInfoSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (userEmail && dbClient) {
+      try {
+        // بررسی وجود کاربر بر اساس ایمیل
+        const res = await dbClient.query(
+          `SELECT * FROM ChatUser WHERE email = '${userEmail}'`
+        )
+        let user
+        if (res?.[0] && res[0].length > 0) {
+          // کاربر موجود: استفاده از اطلاعات رکورد موجود
+          user = res[0][0]
+        } else {
+          // کاربر موجود نیست؛ ایجاد کاربر جدید در جدول ChatUser
+          user = await dbClient.create("ChatUser", {
+            clerk_id: "mxetjcvk4yfeygzxq0y1",
+            name: userName,
+            email: userEmail,
+            created_at: new Date(),
+          })
+        }
+
+        const userId = user.id || user[0]?.id
+
+        // ایجاد چت جدید با استفاده از فیلد user_id مطابق با مدل جدید
+        const chat = await dbClient.create("Chat", {
+          user_id: userId,
+          status: "viewed",
+          started_at: new Date(),
+          ended_at: new Date(),
+          created_at: new Date(),
+        })
+
+        const chatID = chat.id || chat[0]?.id
+
+        setCustomerId(userId)
+        setChatId(chatID)
+        setShowUserInfoDialog(false)
+      } catch (err) {
+        console.error("Error saving user info or creating chat:", err)
+      }
+    }
+  }
+
+  const renderChatInterface = () => {
+    const sortedMessages = [...messages].sort(
+      (a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    )
+
+    return (
+      <Card className="w-[320px] h-[480px] flex flex-col">
+        <CardHeader className="space-y-1.5 p-4">
+          <div className="flex justify-between items-center">
+            {showMainAdmin ? (
+              <div className="flex items-center gap-2">
+                {activeAdmin ? (
+                  <>
+                    <Avatar>
+                      <AvatarImage
+                        src={activeAdmin.image || ""}
+                        alt={`${activeAdmin.firstname} ${activeAdmin.lastname}`}
+                      />
+                      <AvatarFallback>
+                        {activeAdmin.firstname[0]}
+                        {activeAdmin.lastname[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="font-semibold">
+                        {activeAdmin.firstname} {activeAdmin.lastname}
+                      </h3>
+                      <p className="text-xs text-muted-foreground">
+                        {activeAdmin.email}
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-sm">ادمین فعال یافت نشد</div>
+                )}
               </div>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <div className="flex -space-x-2">
-                {activeAdmins.slice(0, 3).map((admin, i) => (
-                  <Avatar key={i} className="border-2 border-background">
-                    <AvatarImage src={admin.image} alt={admin.name} />
-                    <AvatarFallback>
-                      {admin.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
-                    </AvatarFallback>
-                  </Avatar>
-                ))}
-              </div>
-              <span className="text-sm">+{activeAdmins.length - 3}</span>
-            </div>
-          )}
-          <div className="flex gap-2">
-            <Button size="icon" variant="ghost" onClick={() => setShowMainAdmin(!showMainAdmin)}>
-              <Users className="h-4 w-4" />
-            </Button>
-            <Button size="icon" variant="ghost" onClick={() => setIsOpen(false)}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="flex-1 p-0">
-        <ScrollArea className="h-[340px] p-4">
-          <div className="space-y-4">
-            {messages.map((msg) => (
-              <div key={msg.id} className={cn("flex", msg.sender === "user" ? "justify-end" : "justify-start")}>
-                <div
-                  className={cn(
-                    "rounded-lg px-3 py-2 max-w-[80%]",
-                    msg.sender === "user" ? "bg-primary text-primary-foreground" : "bg-muted",
-                  )}
-                >
-                  {msg.content}
+            ) : (
+              <div className="flex items-center gap-2">
+                <div className="flex -space-x-2">
+                  {admins.slice(0, 3).map((admin) => (
+                    <Avatar key={admin.id} className="border-2 border-background">
+                      <AvatarImage
+                        src={admin.image || ""}
+                        alt={`${admin.firstname} ${admin.lastname}`}
+                      />
+                      <AvatarFallback>
+                        {admin.firstname[0]}
+                        {admin.lastname[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                  ))}
                 </div>
+                {admins.length > 3 && (
+                  <span className="text-sm">+{admins.length - 3}</span>
+                )}
               </div>
-            ))}
-            <div ref={messagesEndRef} />
+            )}
+            <div className="flex gap-2">
+              {chatStatus === "active" && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => setShowMainAdmin(!showMainAdmin)}
+                >
+                  <Users className="h-4 w-4" />
+                </Button>
+              )}
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setIsOpen(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-        </ScrollArea>
-      </CardContent>
-      <CardFooter className="p-3">
-        <form onSubmit={handleSendMessage} className="flex w-full gap-2">
-          <Input
-            placeholder="Type your message..."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            className="flex-1"
-          />
-          <Button type="submit" size="icon" variant="secondary">
-            <Send className="h-4 w-4" />
-          </Button>
-        </form>
-      </CardFooter>
-    </Card>
-  )
+        </CardHeader>
+        <CardContent className="flex-1 p-0">
+          <ScrollArea className="h-[340px] p-4">
+            <div className="space-y-4">
+              {sortedMessages.map((msg) => {
+                const isUserMessage =
+                  String(msg.sender_id) === String(customerId)
+                return (
+                  <div
+                    key={msg.id}
+                    className={cn(
+                      "flex",
+                      isUserMessage ? "justify-end" : "justify-start"
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "rounded-lg px-3 py-2 max-w-[80%]",
+                        isUserMessage
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted"
+                      )}
+                    >
+                      {msg.content}
+                    </div>
+                  </div>
+                )
+              })}
+              <div ref={messagesEndRef} />
+            </div>
+          </ScrollArea>
+        </CardContent>
+        <CardFooter className="p-3">
+          <form onSubmit={handleSendMessage} className="flex w-full gap-2">
+            <Input
+              placeholder="Type your message..."
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              className="flex-1"
+            />
+            <Button type="submit" size="icon" variant="secondary">
+              <Send className="h-4 w-4" />
+            </Button>
+          </form>
+        </CardFooter>
+      </Card>
+    )
+  }
 
   const renderUserInfoForm = () => (
     <Card className="w-[320px] h-[480px] flex flex-col">
@@ -171,11 +401,21 @@ export function ChatWidget() {
         <form onSubmit={handleUserInfoSubmit} className="space-y-4 w-full">
           <div className="space-y-2">
             <Label htmlFor="name">Name (optional)</Label>
-            <Input id="name" value={userName} onChange={(e) => setUserName(e.target.value)} />
+            <Input
+              id="name"
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" value={userEmail} onChange={(e) => setUserEmail(e.target.value)} required />
+            <Input
+              id="email"
+              type="email"
+              value={userEmail}
+              onChange={(e) => setUserEmail(e.target.value)}
+              required
+            />
           </div>
           <Button type="submit" className="w-full">
             Start Chatting
@@ -194,11 +434,14 @@ export function ChatWidget() {
           renderChatInterface()
         )
       ) : (
-        <Button onClick={() => setIsOpen(true)} size="icon" className="h-12 w-12 rounded-full shadow-lg">
+        <Button
+          onClick={() => setIsOpen(true)}
+          size="icon"
+          className="h-12 w-12 rounded-full shadow-lg"
+        >
           <MessageCircle className="h-6 w-6" />
         </Button>
       )}
     </div>
   )
 }
-

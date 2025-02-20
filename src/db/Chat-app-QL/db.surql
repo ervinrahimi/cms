@@ -7,7 +7,7 @@ DEFINE TABLE ChatUser SCHEMAFULL
       PERMISSIONS FOR select, create, update, delete WHERE id = $auth.id;
 
 DEFINE FIELD id ON TABLE ChatUser TYPE string ASSERT $value != NONE;
-DEFINE FIELD clerk_user_id ON TABLE ChatUser TYPE string ASSERT $value != NONE;
+DEFINE FIELD clerk_id ON TABLE ChatUser TYPE string ASSERT $value != NONE;
 DEFINE FIELD name ON TABLE ChatUser TYPE string;
 DEFINE FIELD email ON TABLE ChatUser TYPE string ASSERT string::is::email($value);
 DEFINE FIELD created_at ON TABLE ChatUser TYPE datetime;
@@ -23,7 +23,8 @@ DEFINE TABLE ChatAdmin SCHEMAFULL
     PERMISSIONS FOR select, create, update, delete WHERE id = $auth.id;
 
 DEFINE FIELD id ON TABLE ChatAdmin TYPE string ASSERT $value != NONE;
-DEFINE FIELD clerk_admin_id ON TABLE ChatAdmin TYPE string ASSERT $value != NONE;
+DEFINE FIELD image ON TABLE ChatAdmin TYPE option<string>;
+DEFINE FIELD clerk_id ON TABLE ChatAdmin TYPE string ASSERT $value != NONE;
 DEFINE FIELD firstname ON TABLE ChatAdmin TYPE string;
 DEFINE FIELD lastname ON TABLE ChatAdmin TYPE string;
 DEFINE FIELD email ON TABLE ChatAdmin TYPE string ASSERT string::is::email($value);
@@ -41,9 +42,9 @@ DEFINE TABLE Chat SCHEMAFULL
     PERMISSIONS FOR select, create, update, delete WHERE id = $auth.id;
 
 DEFINE FIELD id ON TABLE Chat TYPE string ASSERT $value != NONE;
-DEFINE FIELD customer_id ON TABLE Chat TYPE record<ChatUser>;
-DEFINE FIELD admin_id ON TABLE Chat TYPE record<ChatAdmin>;
-DEFINE FIELD status ON TABLE Chat TYPE string ASSERT $value IN ["pending", "activated", "viewed", "closed"];
+DEFINE FIELD user_id ON TABLE Chat TYPE record<ChatUser>;
+DEFINE FIELD admin_id ON TABLE Chat TYPE option<record<ChatAdmin>>;
+DEFINE FIELD status ON TABLE Chat TYPE string ASSERT $value IN ["pending", "active", "viewed", "closed"];
 DEFINE FIELD started_at ON TABLE Chat TYPE datetime;
 DEFINE FIELD ended_at ON TABLE Chat TYPE option<datetime>;
 DEFINE FIELD created_at ON TABLE Chat TYPE datetime;
