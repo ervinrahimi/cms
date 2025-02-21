@@ -101,7 +101,7 @@ export function UserManagementTable() {
     if (!isAuthDone || !dbClient) return;
     try {
       const response = await dbClient.query(
-        'SELECT id, name, email, clerk_user_id, created_at FROM Customer;',
+        'SELECT id, name, email, clerk_user_id, created_at FROM ChatUser;',
         {}
       ) as [Customer[]];
       setCustomers(response[0]);
@@ -129,7 +129,7 @@ export function UserManagementTable() {
         `UPDATE ${customer.id} SET name = $newName, email = $newEmail;`,
         { newName, newEmail }
       );
-      console.log('Customer updated:', customer.id);
+     
       fetchCustomers();
     } catch (error) {
       console.error('Error updating customer:', error);
@@ -144,7 +144,7 @@ export function UserManagementTable() {
         `DELETE ${customer.id};`,
         {}
       );
-      console.log('Customer deleted:', customer.id);
+     
       fetchCustomers();
     } catch (error) {
       console.error('Error deleting customer:', error);
