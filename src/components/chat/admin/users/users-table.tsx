@@ -97,11 +97,11 @@ export function UserManagementTable() {
   }, []);
 
   // Fetch customers from the database using the .query method
-  async function fetchCustomers() {
+  const fetchCustomers = React.useCallback(async () => {
     if (!isAuthDone || !dbClient) return;
     try {
       const response = await dbClient.query(
-        'SELECT id, name, email, clerk_user_id, created_at FROM ChatUser;',
+        'SELECT id,name,email,clerk_id,created_at FROM ChatUser;',
         {}
       ) as [Customer[]];
       setCustomers(response[0]);
@@ -110,14 +110,15 @@ export function UserManagementTable() {
     } finally {
       setIsLoading(false);
     }
-  }
-
-  // Fetch customers after successful connection to the database
+  }, [isAuthDone, dbClient]);
+  
   React.useEffect(() => {
     if (isAuthDone && dbClient) {
       fetchCustomers();
     }
-  }, [isAuthDone, dbClient]);
+  }, [isAuthDone, dbClient, fetchCustomers]); 
+  
+  
 
   // Edit customer operation
   async function handleEditCustomer(customer: Customer) {
@@ -129,7 +130,7 @@ export function UserManagementTable() {
         `UPDATE ${customer.id} SET name = $newName, email = $newEmail;`,
         { newName, newEmail }
       );
-     
+      console.log('Customer updated:', customer.id);
       fetchCustomers();
     } catch (error) {
       console.error('Error updating customer:', error);
@@ -144,7 +145,7 @@ export function UserManagementTable() {
         `DELETE ${customer.id};`,
         {}
       );
-     
+      console.log('Customer deleted:', customer.id);
       fetchCustomers();
     } catch (error) {
       console.error('Error deleting customer:', error);
@@ -172,9 +173,9 @@ export function UserManagementTable() {
       cell: ({ row }) => <div>{row.getValue('email')}</div>,
     },
     {
-      accessorKey: 'clerk_user_id',
+      accessorKey: 'clerk_id',
       header: 'Clerk User ID',
-      cell: ({ row }) => <div>{row.getValue('clerk_user_id')}</div>,
+      cell: ({ row }) => <div>{row.getValue('clerk_id')}</div>,
     },
     {
       accessorKey: 'created_at',
