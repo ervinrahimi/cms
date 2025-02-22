@@ -56,6 +56,8 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import sdb from '@/db/surrealdb'; // اتصال به SurrealDB
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 // تعریف اینترفیس ChatRoom با فیلدهای مورد نیاز
 interface ChatRoom {
@@ -65,6 +67,65 @@ interface ChatRoom {
   status: 'pending' | 'activated' | 'viewed' | 'closed';
   lastMessage: string;
   createdAt: string;
+}
+
+type Message = {
+  id: string
+  sender: "user" | "admin"
+  content: string
+  timestamp: string
+}
+
+const sampleMessages: Message[] = [
+  { id: "1", sender: "user", content: "سلام، من یک سوال دارم", timestamp: "2024-02-21T10:00:00" },
+  { id: "2", sender: "admin", content: "سلام، بفرمایید. چطور می‌توانم کمکتان کنم؟", timestamp: "2024-02-21T10:05:00" },
+  {
+    id: "3",
+    sender: "user",
+    content: "من در مورد نحوه استفاده از این پلتفرم سوال دارم",
+    timestamp: "2024-02-21T10:10:00",
+  },
+  {
+    id: "4",
+    sender: "admin",
+    content: "بله، حتما. چه بخشی از پلتفرم برایتان مبهم است؟",
+    timestamp: "2024-02-21T10:15:00",
+  },
+  {
+    id: "5",
+    sender: "user",
+    content: "من نمی‌دانم چطور می‌توانم یک پروژه جدید ایجاد کنم",
+    timestamp: "2024-02-21T10:20:00",
+  },
+]
+
+const ChatView: React.FC<{ messages: Message[] }> = ({ messages }) => {
+  return (
+    <ScrollArea className="flex-grow overflow-auto">
+      <div className="space-y-4 p-4">
+        {messages.map((message) => (
+          <div key={message.id} className={`flex ${message.sender === "admin" ? "justify-end" : "justify-start"}`}>
+            <div
+              className={`flex items-start max-w-[70%] ${message.sender === "admin" ? "flex-row-reverse" : "flex-row"}`}
+            >
+              <Avatar className="w-8 h-8">
+                <AvatarImage src={message.sender === "admin" ? "/admin-avatar.png" : "/user-avatar.png"} />
+                <AvatarFallback>{message.sender === "admin" ? "A" : "U"}</AvatarFallback>
+              </Avatar>
+              <div className={`mx-2 ${message.sender === "admin" ? "text-right" : "text-left"}`}>
+                <div
+                  className={`rounded-lg p-2 ${message.sender === "admin" ? "bg-primary text-primary-foreground" : "bg-muted"}`}
+                >
+                  {message.content}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">{new Date(message.timestamp).toLocaleString()}</div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </ScrollArea>
+  )
 }
 
 // تعریف ستون‌ها با استفاده از TanStack React Table
@@ -127,9 +188,9 @@ const columns: ColumnDef<ChatRoom>[] = [
     cell: ({ row }) => <div>{row.getValue('createdAt')}</div>,
   },
   {
-    id: 'actions',
+    id: "actions",
     cell: ({ row }) => {
-      const chatRoom = row.original;
+      const chatRoom = row.original
 
       return (
         <DropdownMenu>
@@ -141,34 +202,38 @@ const columns: ColumnDef<ChatRoom>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => console.log('Mark as viewed:', chatRoom.id)}>
+            <DropdownMenuItem onClick={() => console.log("Mark as viewed:", chatRoom.id)}>
               Mark as viewed
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <Sheet>
               <SheetTrigger asChild>
-                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                  Send message
-                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>View Chatroom</DropdownMenuItem>
               </SheetTrigger>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>Send message</SheetTitle>
-                  <SheetDescription>Send your message to the user.</SheetDescription>
-                </SheetHeader>
-                <div className="py-4">
-                  <Textarea placeholder="Type your message here..." className="mb-2" />
-                  <Button className="w-full">
-                    <Send className="mr-2 h-4 w-4" /> Send message
-                  </Button>
+              <SheetContent side="right" size="full" className="w-full sm:max-w-full">
+                <div className="flex flex-col h-full">
+                  <SheetHeader>
+                    <SheetTitle>Chat with</SheetTitle>
+                    <SheetDescription>View and respond to messages</SheetDescription>
+                  </SheetHeader>
+                  <div className="flex-grow flex flex-col overflow-hidden">
+                    <ChatView messages={sampleMessages} />
+                    <div className="p-4 border-t">
+                      <div className="flex items-center space-x-2">
+                        <Textarea placeholder="Type your message here..." className="flex-grow" />
+                        <Button size="icon">
+                          <Send className="h-4 w-4" />
+                          <span className="sr-only">Send message</span>
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </SheetContent>
             </Sheet>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                  Close chat room
-                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Close chat room</DropdownMenuItem>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -179,7 +244,7 @@ const columns: ColumnDef<ChatRoom>[] = [
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => console.log('Chat room closed:', chatRoom.id)}>
+                  <AlertDialogAction onClick={() => console.log("Chat room closed:", chatRoom.id)}>
                     <X className="mr-2 h-4 w-4" /> Close chat room
                   </AlertDialogAction>
                 </AlertDialogFooter>
@@ -187,7 +252,7 @@ const columns: ColumnDef<ChatRoom>[] = [
             </AlertDialog>
           </DropdownMenuContent>
         </DropdownMenu>
-      );
+      )
     },
   },
 ];
