@@ -1,4 +1,4 @@
-import { ChatWidget } from '@/components/chat/user/chat-widget'
+import { ChatBot } from '@/components/chat/chat-bot/ChatBot'
 import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 import type { Metadata } from 'next'
 
@@ -14,6 +14,10 @@ export default function RootLayout({
 }>) {
   return (
     <>
+      {/* ChatBot component is rendered here */}
+      <ChatBot />
+
+      {/* Clerk Auth Buttons */}
       <div className='clerk-auth-buttons'>
         <SignedOut>
           <SignInButton />
@@ -22,7 +26,8 @@ export default function RootLayout({
           <UserButton />
         </SignedIn>
       </div>
-      <ChatWidget />
+
+      {/* Render children */}
       {children}
     </>
   )
