@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import * as React from 'react';
@@ -13,7 +14,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { ArrowUpDown, ChevronDown, MoreHorizontal, Send, X } from 'lucide-react';
+import { ArrowUpDown, ChevronDown, MoreHorizontal, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -45,88 +46,65 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Textarea } from '@/components/ui/textarea';
-import sdb from '@/db/surrealdb'; // اتصال به SurrealDB
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import sdb from '@/db/surrealdb';
 
-// تعریف اینترفیس ChatRoom با فیلدهای مورد نیاز
+// کامپوننت جدید:
+import { AdminChatRoom } from './AdminChatRoom';
+
 interface ChatRoom {
   id: string;
   user: string;
-  admin: string;
-  status: 'pending' | 'activated' | 'viewed' | 'closed';
-  lastMessage: string;
+  status: 'pending' | 'active' | 'viewed' | 'closed';
   createdAt: string;
 }
 
-type Message = {
-  id: string
-  sender: "user" | "admin"
-  content: string
-  timestamp: string
+interface AdminsList {
+  adminsList: {
+    id: string;
+    imageUrl: string;
+    firstName: string;
+    lastName: string;
+    emailAddresses: string[];
+  }[];
 }
 
+interface Message {
+  id: string;
+  sender: 'user' | 'admin';
+  content: string;
+  timestamp: string;
+}
+
+// پیام‌های نمونه (دقیقاً همانند قبل)
 const sampleMessages: Message[] = [
-  { id: "1", sender: "user", content: "سلام، من یک سوال دارم", timestamp: "2024-02-21T10:00:00" },
-  { id: "2", sender: "admin", content: "سلام، بفرمایید. چطور می‌توانم کمکتان کنم؟", timestamp: "2024-02-21T10:05:00" },
+  { id: '1', sender: 'user', content: 'سلام، من یک سوال دارم', timestamp: '2024-02-21T10:00:00' },
   {
-    id: "3",
-    sender: "user",
-    content: "من در مورد نحوه استفاده از این پلتفرم سوال دارم",
-    timestamp: "2024-02-21T10:10:00",
+    id: '2',
+    sender: 'admin',
+    content: 'سلام، بفرمایید. چطور می‌توانم کمکتان کنم؟',
+    timestamp: '2024-02-21T10:05:00',
   },
   {
-    id: "4",
-    sender: "admin",
-    content: "بله، حتما. چه بخشی از پلتفرم برایتان مبهم است؟",
-    timestamp: "2024-02-21T10:15:00",
+    id: '3',
+    sender: 'user',
+    content: 'من در مورد نحوه استفاده از این پلتفرم سوال دارم',
+    timestamp: '2024-02-21T10:10:00',
   },
   {
-    id: "5",
-    sender: "user",
-    content: "من نمی‌دانم چطور می‌توانم یک پروژه جدید ایجاد کنم",
-    timestamp: "2024-02-21T10:20:00",
+    id: '4',
+    sender: 'admin',
+    content: 'بله، حتما. چه بخشی از پلتفرم برایتان مبهم است؟',
+    timestamp: '2024-02-21T10:15:00',
   },
-]
-
-const ChatView: React.FC<{ messages: Message[] }> = ({ messages }) => {
-  return (
-    <ScrollArea className="flex-grow overflow-auto">
-      <div className="space-y-4 p-4">
-        {messages.map((message) => (
-          <div key={message.id} className={`flex ${message.sender === "admin" ? "justify-end" : "justify-start"}`}>
-            <div
-              className={`flex items-start max-w-[70%] ${message.sender === "admin" ? "flex-row-reverse" : "flex-row"}`}
-            >
-              <Avatar className="w-8 h-8">
-                <AvatarImage src={message.sender === "admin" ? "/admin-avatar.png" : "/user-avatar.png"} />
-                <AvatarFallback>{message.sender === "admin" ? "A" : "U"}</AvatarFallback>
-              </Avatar>
-              <div className={`mx-2 ${message.sender === "admin" ? "text-right" : "text-left"}`}>
-                <div
-                  className={`rounded-lg p-2 ${message.sender === "admin" ? "bg-primary text-primary-foreground" : "bg-muted"}`}
-                >
-                  {message.content}
-                </div>
-                <div className="text-xs text-muted-foreground mt-1">{new Date(message.timestamp).toLocaleString()}</div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </ScrollArea>
-  )
-}
+  {
+    id: '5',
+    sender: 'user',
+    content: 'من نمی‌دانم چطور می‌توانم یک پروژه جدید ایجاد کنم',
+    timestamp: '2024-02-21T10:20:00',
+  },
+];
 
 // تعریف ستون‌ها با استفاده از TanStack React Table
 const columns: ColumnDef<ChatRoom>[] = [
@@ -150,7 +128,7 @@ const columns: ColumnDef<ChatRoom>[] = [
           className={
             status === 'pending'
               ? 'text-yellow-600'
-              : status === 'activated'
+              : status === 'active'
               ? 'text-green-600'
               : status === 'viewed'
               ? 'text-blue-600'
@@ -161,8 +139,8 @@ const columns: ColumnDef<ChatRoom>[] = [
         >
           {status === 'pending'
             ? 'Pending'
-            : status === 'activated'
-            ? 'Activated'
+            : status === 'active'
+            ? 'Active'
             : status === 'viewed'
             ? 'Viewed'
             : status === 'closed'
@@ -188,9 +166,9 @@ const columns: ColumnDef<ChatRoom>[] = [
     cell: ({ row }) => <div>{row.getValue('createdAt')}</div>,
   },
   {
-    id: "actions",
+    id: 'actions',
     cell: ({ row }) => {
-      const chatRoom = row.original
+      const chatRoom = row.original;
 
       return (
         <DropdownMenu>
@@ -202,38 +180,26 @@ const columns: ColumnDef<ChatRoom>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => console.log("Mark as viewed:", chatRoom.id)}>
+            <DropdownMenuItem onClick={() => console.log('Mark as viewed:', chatRoom.id)}>
               Mark as viewed
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <Sheet>
               <SheetTrigger asChild>
-                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>View Chatroom</DropdownMenuItem>
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                  View Chatroom
+                </DropdownMenuItem>
               </SheetTrigger>
-              <SheetContent side="right" size="full" className="w-full sm:max-w-full">
-                <div className="flex flex-col h-full">
-                  <SheetHeader>
-                    <SheetTitle>Chat with</SheetTitle>
-                    <SheetDescription>View and respond to messages</SheetDescription>
-                  </SheetHeader>
-                  <div className="flex-grow flex flex-col overflow-hidden">
-                    <ChatView messages={sampleMessages} />
-                    <div className="p-4 border-t">
-                      <div className="flex items-center space-x-2">
-                        <Textarea placeholder="Type your message here..." className="flex-grow" />
-                        <Button size="icon">
-                          <Send className="h-4 w-4" />
-                          <span className="sr-only">Send message</span>
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              <SheetContent side="right" className="w-full sm:max-w-full">
+                {/* اینجاست که از کامپوننت جداگانه استفاده می‌کنیم */}
+                <AdminChatRoom messages={sampleMessages} />
               </SheetContent>
             </Sheet>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Close chat room</DropdownMenuItem>
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                  Close chat room
+                </DropdownMenuItem>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -244,7 +210,7 @@ const columns: ColumnDef<ChatRoom>[] = [
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => console.log("Chat room closed:", chatRoom.id)}>
+                  <AlertDialogAction onClick={() => console.log('Chat room closed:', chatRoom.id)}>
                     <X className="mr-2 h-4 w-4" /> Close chat room
                   </AlertDialogAction>
                 </AlertDialogFooter>
@@ -252,13 +218,13 @@ const columns: ColumnDef<ChatRoom>[] = [
             </AlertDialog>
           </DropdownMenuContent>
         </DropdownMenu>
-      )
+      );
     },
   },
 ];
 
 // کامپوننت اصلی جدول مدیریت چت روم
-export function ChatRoomManagementTable() {
+export function ChatRoomManagementTable({ adminsList }: AdminsList) {
   const [data, setData] = React.useState<ChatRoom[]>([]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -270,9 +236,9 @@ export function ChatRoomManagementTable() {
     async function fetchData() {
       try {
         const db = await sdb();
-        // Query برای دریافت اطلاعات Chat به همراه اطلاعات مشتری و ادمین
+        // Query برای دریافت اطلاعات Chat به همراه اطلاعات مشتری
         const res = await db.query(
-          'SELECT *, customer_id.* as ChatUser, admin_id.* as ChatAdmin FROM Chat ORDER BY created_at DESC'
+          'SELECT *, user_id.* as ChatUser FROM Chat ORDER BY created_at DESC'
         );
         const chats = res?.[0] || [];
 
@@ -280,13 +246,11 @@ export function ChatRoomManagementTable() {
         const mappedData: ChatRoom[] = chats.map((chat: any) => ({
           id: chat.id,
           user: chat.ChatUser ? chat.ChatUser.name : '',
-          admin: chat.ChatAdmin ? `${chat.ChatAdmin.firstname} ${chat.ChatAdmin.lastname}` : '',
-          // نگاشت وضعیت: اگر pending یا activated باشد => open، اگر viewed باشد => viewed، در غیر این صورت closed
           status:
             chat.status === 'pending'
               ? 'pending'
-              : chat.status === 'activated'
-              ? 'activated'
+              : chat.status === 'active'
+              ? 'active'
               : chat.status === 'viewed'
               ? 'viewed'
               : chat.status === 'closed'
@@ -303,7 +267,7 @@ export function ChatRoomManagementTable() {
       }
     }
     fetchData();
-  }, []);
+  }, [adminsList]);
 
   const table = useReactTable({
     data,
@@ -324,6 +288,7 @@ export function ChatRoomManagementTable() {
     },
   });
 
+  // اسکلت بارگذاری (loading) بدون حذف هیچ استایلی
   if (isLoading) {
     return (
       <div className="w-full">

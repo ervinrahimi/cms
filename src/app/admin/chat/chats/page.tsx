@@ -1,9 +1,7 @@
-import { ChatRoomManagementTable } from "@/components/chat/admin/chats/chatroom-management-table";
-
-
+import ChatroomManagment from "@/components/chat/admin/chats/ChatroomManagement";
 
 export default function AdminPage() {
   return (
-    <ChatRoomManagementTable />
+    <ChatroomManagment />
   )
 }
